@@ -119,3 +119,69 @@ jobs:
             scripts/fix-optiscaler-manager-overlay-compile.py
             standalone/backend-payload/DLSS5-BEFORE-UPSCALING-BACKEND.txt
           retention-days: 14
+
+
+  release-v0-1-0:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'Release v0.1.0'
+    needs: test
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Download tested Windows build from CI #119
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 35534942524 --repo "${{ github.repository }}" --name "DLSS5-Before-Upscaling-Windows-preview" --dir release-bin
+          gh run download 35534942524 --repo "${{ github.repository }}" --name "DLSS5-Before-Upscaling-OptiScaler-source-patch" --dir release-source
+
+      - name: Prepare release assets
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "release-source/*" -DestinationPath "DLSS5-Before-Upscaling-OptiScaler-source-patch.zip" -Force
+          $exe = "release-bin/DLSS5-Before-Upscaling.exe"
+          $src = "DLSS5-Before-Upscaling-OptiScaler-source-patch.zip"
+          $exeHash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+          $srcHash = (Get-FileHash $src -Algorithm SHA256).Hash.ToLower()
+          @"
+          $exeHash  DLSS5-Before-Upscaling.exe
+          $srcHash  DLSS5-Before-Upscaling-OptiScaler-source-patch.zip
+          "@ | Set-Content "SHA256SUMS.txt" -Encoding ascii
+
+      - name: Publish v0.1.0
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          @"
+          ## DLSS5 Before Upscaling v0.1.0
+
+          First formal release of DLSS5 Before Upscaling.
+
+          ### Highlights
+          - Per-game DLSS 5 Neural Rendering profiles
+          - Native DLSS Pre-SR detection, including DLSS runtimes outside the main EXE directory
+          - Supported temporal FSR/XeSS routing to managed DLSS Super Resolution
+          - 1–3 independent Neural Rendering passes
+          - Standard, Natural and Cinematic styles per active pass
+          - In-game Insert overlay for image-dependent tuning
+          - Launcher discovery plus folder-based/manual game addition
+          - Steam artwork plus local non-Steam artwork discovery with EXE-icon fallback
+          - English and Simplified Chinese UI
+          - Portable Windows build
+
+          ### Runtime
+          nvngx_dlssnr.dll is not redistributed. When required, the app asks you to select a trusted local copy and validates it locally.
+
+          ### Compatibility
+          Game compatibility varies by title, rendering path and game updates. The app does not bypass or disable anti-cheat systems.
+
+          ### Files
+          - DLSS5-Before-Upscaling.exe — portable Windows application
+          - DLSS5-Before-Upscaling-OptiScaler-source-patch.zip — source/patch material for the managed backend
+          - SHA256SUMS.txt — SHA-256 checksums
+          "@ | Set-Content "release-notes.md" -Encoding utf8
+
+          gh release create v0.1.0 "release-bin/DLSS5-Before-Upscaling.exe#DLSS5-Before-Upscaling.exe" "DLSS5-Before-Upscaling-OptiScaler-source-patch.zip#DLSS5-Before-Upscaling-OptiScaler-source-patch.zip" "SHA256SUMS.txt#SHA256SUMS.txt" --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "DLSS5 Before Upscaling v0.1.0" --notes-file "release-notes.md" --latest

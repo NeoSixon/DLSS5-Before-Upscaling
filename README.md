@@ -30,32 +30,32 @@ The desktop app handles setup and per-game configuration. Image-dependent tuning
 
 ## Download
 
-DLSS5 Before Upscaling is currently in the **0.1.x preview** stage.
+**[Download the latest release from GitHub Releases](https://github.com/NeoSixon/DLSS5-Before-Upscaling/releases/latest).**
 
-**[Download the latest published preview from GitHub Releases](https://github.com/NeoSixon/DLSS5-Before-Upscaling/releases).**
+The Windows release is portable: download `DLSS5-Before-Upscaling.exe` and run it directly.
 
-For the newest development build:
+Development builds are also available from **[GitHub Actions](https://github.com/NeoSixon/DLSS5-Before-Upscaling/actions)** after successful CI runs.
 
-**[Actions](https://github.com/NeoSixon/DLSS5-Before-Upscaling/actions) → latest successful CI run → `DLSS5-Before-Upscaling-Windows-preview`**
-
-> This is an early preview. Game compatibility may vary, and the UI and workflow may change between releases.
+> Game compatibility varies by title, rendering path, and game updates.
 
 ## Quick start
 
 1. Download and run `DLSS5-Before-Upscaling.exe`.
-2. Click **Scan library**, or use **Add game** to select a game's main executable manually.
-3. Open a compatible game from the Library.
-4. Configure Neural Rendering:
+2. Click **Scan library** to discover installed launcher games, or choose **Add game**.
+3. For a manually added title, choose the **game folder** first and select the recommended main executable. Use **Choose EXE manually** when needed.
+4. Open the game from the Library.
+5. Configure Neural Rendering:
    - Enable **DLSS 5 Neural Rendering**.
    - Enable **Pre-SR** to run Neural Rendering before DLSS Super Resolution.
-   - Choose **1–3 passes** and the style for each pass.
-5. Click **Install / update backend**.
-   - If `nvngx_dlssnr.dll` is not already available, the app will ask you to select a trusted local copy.
+   - Choose **1–3 passes**.
+   - Choose **Standard**, **Natural**, or **Cinematic** independently for each active pass.
+6. Click **Install / update backend**.
+   - If `nvngx_dlssnr.dll` is not already available, the app asks you to select a trusted local copy.
    - The runtime is validated locally and can be cached for reuse.
-6. Launch the game and keep **DLSS Super Resolution enabled** in the game's graphics settings.
-7. Press **Insert** in game to open the Neural Rendering panel and tune image-dependent settings.
+7. Launch the game and keep its temporal upscaler enabled.
+8. Press **Insert** in game to open the Neural Rendering panel and tune image-dependent settings.
 
-To undo the managed installation, open the game profile and use **Restore original**.
+To undo a managed installation, open the game profile and use **Restore original**.
 
 ## The render path
 
@@ -65,9 +65,9 @@ Game frame
     ▼
 DLSS 5 Neural Rendering
     │
-    ├── Pass 1  ── style
-    ├── Pass 2  ── style / inherit
-    └── Pass 3  ── style / inherit
+    ├── Pass 1  ── Standard / Natural / Cinematic
+    ├── Pass 2  ── Standard / Natural / Cinematic
+    └── Pass 3  ── Standard / Natural / Cinematic
     │
     ▼
 Before Upscaling
@@ -79,7 +79,7 @@ DLSS Super Resolution
 Output
 ```
 
-The core workflow is simple: Neural Rendering is configured to run before the upscaling stage, with up to three managed passes.
+For native DLSS titles, the app uses the detected DLSS path. Where supported, temporal FSR/XeSS inputs can be routed through the managed DLSS Super Resolution path.
 
 ## Inside the app
 
@@ -89,22 +89,27 @@ The core workflow is simple: Neural Rendering is configured to run before the up
 
 **Game library** — Scan installed libraries, add titles manually, search, filter, favorite, hide or remove entries without deleting game files.
 
-**Per-game profiles** — Enable DLSS 5 Neural Rendering, switch Pre-SR placement, choose 1–3 passes, and configure each pass independently.
+**Per-game profiles** — Enable DLSS 5 Neural Rendering, switch Pre-SR placement, choose 1–3 passes, and configure each active pass independently.
 
 **In-game panel** — Press **Insert** while the game is running to tune image-dependent settings against the actual frame.
+
+**Artwork** — Steam entries use Steam library artwork when available. Non-Steam entries look for suitable artwork locally and fall back to the executable icon. No third-party artwork API key is required.
 
 **Recovery** — Managed installs keep tracked backups so original game files can be restored from the app.
 
 ## Current scope
 
 - Windows 10/11 x64
-- 64-bit games with a supported rendering path
-- Native DLSS detection
+- 64-bit games with a supported DirectX 12 or Vulkan rendering path
+- Native DLSS detection, including DLSS files outside the executable directory
+- Supported temporal FSR/XeSS routing to managed DLSS Super Resolution
 - DLSS 5 Neural Rendering enable / disable
 - Before-upscaling (Pre-SR) placement
-- 1–3 Neural Rendering passes
-- Independent style selection for each pass
+- 1–3 independent Neural Rendering passes
+- Standard / Natural / Cinematic style selection per active pass
 - Managed OptiScaler DLSS-NR Pre-SR Multipass backend
+- Launcher discovery plus folder-based/manual game addition
+- Steam and local game artwork discovery with executable-icon fallback
 - English and Simplified Chinese UI
 - Portable Windows build
 
