@@ -180,7 +180,9 @@ async function inspectRecord(record, refresh = false) {
   }
   const result = await inspectionCache.get(record.id);
   const supportedApi = result.chosen && ['dxgi', 'vulkan'].includes(result.chosen.api);
-  const compatible = Boolean(result.chosen && result.chosen.bitness === 64 && supportedApi && result.dlss);
+  const route = result.route || null;
+  const compatible = Boolean(result.chosen && result.chosen.bitness === 64 && supportedApi && route?.ready);
+  const canInstall = Boolean(result.chosen && result.chosen.bitness === 64 && supportedApi && route?.installable);
   return {
     id: record.id,
     dir: record.dir,
@@ -195,7 +197,10 @@ async function inspectRecord(record, refresh = false) {
     onlineRisk: Boolean(profile?.onlineRisk),
     chosen: result.chosen,
     dlss: result.dlss,
+    upscalerInputs: result.upscalerInputs || [],
+    route,
     compatible,
+    canInstall,
     installed: Boolean(result.installed),
     existingSetup: existingNrSetup(record.exePath, result.chosen) && !result.hasBackup,
     hasBackup: Boolean(result.hasBackup),
@@ -218,7 +223,10 @@ function cachedViewState() {
       onlineRisk: Boolean(profile?.onlineRisk),
       chosen: null,
       dlss: null,
+      upscalerInputs: [],
+      route: null,
       compatible: null,
+      canInstall: null,
       installed: null,
       existingSetup: false,
       hasBackup: false,
@@ -541,7 +549,7 @@ ipcMain.handle('game:install', (_event, id) => safeResult(async () => {
   if (!inspected.chosen) throw Object.assign(new Error('No supported game executable was detected.'), { code: 'noExecutable' });
   if (inspected.chosen.bitness !== 64) throw Object.assign(new Error('This Neural Rendering route requires a 64-bit game.'), { code: 'unsupportedArchitecture' });
   if (!inspected.chosen.api) throw Object.assign(new Error('The rendering API could not be detected.'), { code: 'noRenderingApi' });
-  if (!inspected.dlss) throw Object.assign(new Error('Native DLSS was not detected for this game.'), { code: 'noDlss' });
+  if (!inspected.canInstall) throw Object.assign(new Error('No usable native or temporal upscaler route was detected for this game.'), { code: 'noUpscalerRoute' });
   if (inspected.hasBackup) throw Object.assign(new Error('This game already has a managed installation. Restore originals before reinstalling.'), { code: 'alreadyInstalled' });
 
   let replaceExisting = false;
@@ -561,6 +569,7 @@ ipcMain.handle('game:install', (_event, id) => safeResult(async () => {
     packageRoot,
     runtimePath,
     settings: settingsFor(record.settings),
+    route: inspected.route,
     replaceExisting
   }, entry => logs.push(entry));
   nrSettings.apply(record.exePath, settingsFor(record.settings));
