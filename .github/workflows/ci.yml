@@ -34,6 +34,7 @@ jobs:
           node --check standalone/core/download.js
           node --check standalone/core/file-state.js
           node --check standalone/core/game-scan.js
+          node --check standalone/core/route-plan.js
           node --check standalone/core/game-process.js
           node --check standalone/core/backend-update.js
           node --check standalone/core/discovery.js
