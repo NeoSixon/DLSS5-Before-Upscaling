@@ -60,12 +60,12 @@ test('desktop language is mirrored into managed in-game overlays with CJK glyph 
   assert.match(compat, /overlayLanguageError/);
 });
 
-test('manager backend revision is mgr21 everywhere user-facing update detection relies on it', () => {
+test('manager backend revision is mgr22 everywhere user-facing update detection relies on it', () => {
   for (const rel of [
     'standalone/core/optiscaler.js',
     'standalone/renderer/home-compat.js'
   ]) {
-    assert.match(read(rel), /0\.7\.7-dlss5mgr21/, `${rel} should use mgr21`);
+    assert.match(read(rel), /0\.7\.7-dlss5mgr22/, `${rel} should use mgr22`);
   }
 });
 
@@ -138,4 +138,10 @@ test('advanced restore controls are contextual instead of always-visible Reset b
   assert.match(fix, /恢复默认值：1\.00/);
   assert.match(fix, /恢复为第 1 层设置/);
   assert.match(fix, /恢复本层默认值：0\.00/);
+});
+
+
+test('manager overlay distinguishes a loaded menu from an active Neural Rendering path', () => {
+  const patch = read('scripts/patch-optiscaler-compact-overlay.py');
+  assert.match(patch, /NR inactive - waiting for supported DLSS path/);
 });

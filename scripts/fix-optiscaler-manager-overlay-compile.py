@@ -509,7 +509,7 @@ def main() -> int:
             ImGui::TextColored(ImVec4(0.502f, 0.780f, 0.016f, 1.0f), "%s - %d pass%s",
                                beforeSr ? "Pre-SR active" : "After-SR active", passes, passes == 1 ? "" : "es");
         else
-            ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "Waiting for DLSS / rendered scene");'''
+            ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "NR inactive - waiting for supported DLSS path");'''
     new_status = r'''        const bool running = DlssNr::IsRunning() || DlssNr::IsRunningVk();
         if (!enabled)
             ImGui::TextDisabled("%s", tr("Off", "关闭"));
@@ -522,7 +522,7 @@ def main() -> int:
                 ImGui::TextColored(ImVec4(0.502f, 0.780f, 0.016f, 1.0f), "%s · %d pass%s", mode, passes, passes == 1 ? "" : "es");
         }
         else
-            ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "%s", tr("Waiting for DLSS / rendered scene", "等待 DLSS / 3D 场景"));'''
+            ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "%s", tr("NR inactive - waiting for supported DLSS path", "NR 未运行 - 等待受支持的 DLSS 路径"));'''
     text = replace_once(text, old_status, new_status, "localized status footer")
     text = replace_once(
         text,

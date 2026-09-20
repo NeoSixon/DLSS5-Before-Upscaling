@@ -176,7 +176,8 @@ async function inspectRecord(record, refresh = false) {
     });
   }
   const result = await inspectionCache.get(record.id);
-  const compatible = Boolean(result.chosen && result.chosen.bitness === 64 && result.chosen.api && result.dlss);
+  const supportedApi = result.chosen && ['dxgi', 'vulkan'].includes(result.chosen.api);
+  const compatible = Boolean(result.chosen && result.chosen.bitness === 64 && supportedApi && result.dlss);
   return {
     id: record.id,
     dir: record.dir,
@@ -227,7 +228,7 @@ function cachedViewState() {
       cachedOnly: true
     };
   });
-  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: runtime.detectCached(app), games };
+  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null, games };
 }
 
 async function viewState({ refreshIds = [], refreshAll = false } = {}) {
@@ -258,7 +259,7 @@ async function viewState({ refreshIds = [], refreshAll = false } = {}) {
     state.selectedGameId = games.find(game => !game.hidden)?.id || null;
     saveState();
   }
-  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: runtime.detectCached(app), games };
+  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null, games };
 }
 
 async function discoverAndMerge(refreshAll = false) {

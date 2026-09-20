@@ -676,7 +676,7 @@ static void RenderDlss5ManagerOverlay(TContext& ctx)
             ImGui::TextColored(ImVec4(0.502f, 0.780f, 0.016f, 1.0f), "%s - %d pass%s",
                                beforeSr ? "Pre-SR active" : "After-SR active", passes, passes == 1 ? "" : "es");
         else
-            ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "Waiting for DLSS / rendered scene");
+            ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "NR inactive - waiting for supported DLSS path");
 
         const std::string shortcut =
             Keybind::KeyNameFromVirtualKeyCode(config->ShortcutKey.value_or_default());
