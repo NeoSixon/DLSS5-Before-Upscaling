@@ -1,0 +1,31 @@
+{
+  "appId": "com.neosixon.dlss5presrmanager",
+  "productName": "DLSS5 Pre-SR Manager",
+  "directories": {
+    "output": "dist-standalone"
+  },
+  "files": [
+    "standalone/**/*",
+    "package.json",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "!standalone/electron-builder.json"
+  ],
+  "extraMetadata": {
+    "name": "dlss5-presr-manager",
+    "version": "0.1.0",
+    "description": "Standalone manager for DLSS 5 Neural Rendering, Pre-SR placement and OptiScaler model-pass profiles",
+    "main": "standalone/main.js",
+    "author": "NeoSixon",
+    "license": "MIT"
+  },
+  "compression": "maximum",
+  "asar": true,
+  "win": {
+    "target": ["portable"],
+    "icon": "build/icon.ico"
+  },
+  "portable": {
+    "artifactName": "DLSS5-PreSR-Manager-${version}-portable.${ext}"
+  }
+}

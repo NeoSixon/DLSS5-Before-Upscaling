@@ -1,0 +1,8 @@
+node_modules/
+dist-standalone/
+build/
+standalone/backend-payload/
+_backend/
+*.log
+.DS_Store
+Thumbs.db

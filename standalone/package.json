@@ -1,0 +1,16 @@
+{
+  "name": "dlss5-presr-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DLSS5 Pre-SR Manager desktop application",
+  "main": "main.js",
+  "author": "NeoSixon",
+  "license": "MIT",
+  "dependencies": {
+    "extract-zip": "^2.0.1"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

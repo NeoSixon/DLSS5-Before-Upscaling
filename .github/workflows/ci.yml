@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Syntax check
+        shell: pwsh
+        run: |
+          node --check standalone/main.js
+          node --check standalone/preload.js
+          node --check standalone/renderer/app.js
+          node --check standalone/renderer/ux-fixes.js
+          node --check standalone/renderer/home-compat.js
+          node --check standalone/core/ini.js
+          node --check standalone/core/download.js
+          node --check standalone/core/file-state.js
+          node --check standalone/core/game-scan.js
+          node --check standalone/core/game-process.js
+          node --check standalone/core/backend-update.js
+          node --check standalone/core/discovery.js
+          node --check standalone/core/runtime.js
+          node --check standalone/core/optiscaler.js
+          node --check standalone/core/nr-settings.js
+          node --check standalone/core/derived/pe.js
+          node --check standalone/core/derived/library.js
+          node --check scripts/test-standalone-library-ui.js
+          python -m py_compile scripts/patch-optiscaler-compact-overlay.py
+          python -m py_compile scripts/fix-optiscaler-manager-overlay-compile.py
+      - name: Unit and renderer tests
+        run: npm test
+
+  build-windows-preview:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v4
+      - name: Checkout pinned OptiScaler v0.7.7 source
+        uses: actions/checkout@v4
+        with:
+          repository: wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass
+          ref: e237f895623742b761f9e5f00067cb3dc62619f4
+          path: _backend
+          submodules: recursive
+      - name: Patch DLSS5 Manager in-game overlay
+        run: |
+          python scripts/patch-optiscaler-compact-overlay.py _backend
+          python scripts/fix-optiscaler-manager-overlay-compile.py _backend
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Build custom OptiScaler backend
+        shell: pwsh
+        run: msbuild _backend/OptiScaler.sln /m /p:Configuration=Release /verbosity:minimal
+      - name: Stage custom backend payload
+        shell: pwsh
+        run: |
+          $dst = 'standalone/backend-payload'
+          Remove-Item $dst -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item '_backend/x64/Release/a/*' $dst -Recurse -Force
+          Copy-Item '_backend/INSTALL-DLSSNR.md' "$dst/INSTALL-DLSSNR.md" -Force
+          Copy-Item '_backend/LICENSE' "$dst/OptiScaler-GPL-3.0.txt" -Force
+          Copy-Item '_backend/Licenses' "$dst/Licenses" -Recurse -Force
+          @"
+          Custom backend for DLSS5 Pre-SR Manager.
+          Upstream: wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass
+          Upstream commit: e237f895623742b761f9e5f00067cb3dc62619f4 (tag v0.7.7)
+          Visible menu patch: scripts/patch-optiscaler-compact-overlay.py
+          Compile compatibility patch: scripts/fix-optiscaler-manager-overlay-compile.py
+          OptiScaler remains licensed under GPL-3.0; see OptiScaler-GPL-3.0.txt.
+          "@ | Set-Content "$dst/DLSS5-MANAGER-BACKEND.txt" -Encoding UTF8
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate staged custom backend
+        shell: pwsh
+        run: node -e "require('./standalone/core/optiscaler').validatePackage(require('path').resolve('standalone/backend-payload')); console.log('custom backend payload valid')"
+      - name: Build Windows portable preview
+        run: npm run build:portable
+      - name: Upload Windows preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: DLSS5-PreSR-Manager-Windows-preview
+          path: dist-standalone/*portable.exe
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload backend source patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: DLSS5-PreSR-Manager-OptiScaler-source-patch
+          path: |
+            scripts/patch-optiscaler-compact-overlay.py
+            scripts/fix-optiscaler-manager-overlay-compile.py
+            standalone/backend-payload/DLSS5-MANAGER-BACKEND.txt
+          retention-days: 14

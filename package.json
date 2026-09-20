@@ -1,0 +1,27 @@
+{
+  "name": "dlss5-presr-manager",
+  "version": "0.1.0",
+  "description": "Standalone Windows manager for DLSS 5 Neural Rendering and Pre-SR profiles",
+  "main": "standalone/main.js",
+  "scripts": {
+    "start": "npm run start:standalone",
+    "prestart:standalone": "npm run icon:standalone",
+    "start:standalone": "electron standalone",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
+    "test:ui": "electron scripts/test-standalone-library-ui.js",
+    "icon": "npm run icon:standalone",
+    "icon:standalone": "electron scripts/make-standalone-icon.js",
+    "prebuild:standalone:portable": "npm run icon:standalone",
+    "build:standalone:portable": "electron-builder --config standalone/electron-builder.json --win portable",
+    "build:portable": "npm run build:standalone:portable"
+  },
+  "author": "NeoSixon",
+  "license": "MIT",
+  "dependencies": {
+    "extract-zip": "^2.0.1"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}
