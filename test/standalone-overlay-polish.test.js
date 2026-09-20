@@ -60,12 +60,12 @@ test('desktop language is mirrored into managed in-game overlays with CJK glyph 
   assert.match(compat, /overlayLanguageError/);
 });
 
-test('manager backend revision is mgr23 everywhere user-facing update detection relies on it', () => {
+test('manager backend revision is mgr24 everywhere user-facing update detection relies on it', () => {
   for (const rel of [
     'standalone/core/optiscaler.js',
     'standalone/renderer/home-compat.js'
   ]) {
-    assert.match(read(rel), /0\.7\.7-dlss5mgr23/, `${rel} should use mgr23`);
+    assert.match(read(rel), /0\.7\.7-dlss5mgr24/, `${rel} should use mgr24`);
   }
 });
 
@@ -154,4 +154,14 @@ test('legacy NGX C evaluate entry points are bridged into the managed backend', 
   assert.match(patch, /D3D12 C EvaluateFeature entry active/);
   assert.match(patch, /D3D12 EvaluateFeature reached/);
   assert.match(patch, /const_cast<NVSDK_NGX_Parameter\*>/);
+});
+
+
+test('preloaded original NGX D3D12 calls are routed through the managed backend', () => {
+  const patch = read('scripts/patch-optiscaler-preloaded-ngx-core.py');
+  assert.match(patch, /Hooked_Dlss5_D3D12_CreateFeature/);
+  assert.match(patch, /Hooked_Dlss5_D3D12_EvaluateFeature/);
+  assert.match(patch, /preloaded NGX D3D12 EvaluateFeature intercepted/);
+  assert.match(patch, /Original_D3D12_EvaluateFeature != nullptr/);
+  assert.match(patch, /\? \(PFN_D3D12_EvaluateFeature\) Original_D3D12_EvaluateFeature/);
 });
