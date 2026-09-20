@@ -54,3 +54,29 @@ test('temporal provider filenames require an actual upscaler, not generic Fideli
   assert.equal(scan.temporalKindFromName('amd_fidelityfx_dx12.dll'), null);
   assert.equal(scan.temporalKindFromName('nvngx_dlss.dll'), null);
 });
+
+
+test('game scan finds native DLSS outside the executable directory when the selected library root contains it', async t => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { writePe } = require('./fixtures/pe');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nr-wuwa-route-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  const exe = path.join(dir, 'Wuthering Waves Game', 'Client', 'Binaries', 'Win64', 'Client-Win64-Shipping.exe');
+  writePe(exe, { text: 'D3D12CreateDevice' });
+
+  const dlss = path.join(
+    dir, 'Wuthering Waves Game', 'Engine', 'Plugins', 'Runtime', 'Nvidia',
+    'DLSS', 'Binaries', 'ThirdParty', 'Win64', 'nvngx_dlss.dll'
+  );
+  fs.mkdirSync(path.dirname(dlss), { recursive: true });
+  fs.writeFileSync(dlss, 'fixture');
+
+  const result = await scan.inspect(exe, null, dir);
+  assert.equal(result.route.id, ROUTE_IDS.NATIVE);
+  assert.equal(result.route.ready, true);
+  assert.equal(result.route.installable, true);
+  assert.equal(result.dlss.path, dlss);
+});
