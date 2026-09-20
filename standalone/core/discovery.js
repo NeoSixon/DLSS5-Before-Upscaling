@@ -85,19 +85,23 @@ function pathDistance(a, b) {
 
 async function scanEntry(entry) {
   const exes = [];
-  const dlss = [];
+  const upscalerFiles = [];
   await gameScan.walkFiles(entry.dir, async (full, name, depth) => {
-    if (/^nvngx_dlss\.dll$/i.test(name)) dlss.push(full);
+    if (/^nvngx_dlss\.dll$/i.test(name)) upscalerFiles.push({ path: full, kind: 'dlss' });
+    else {
+      const kind = gameScan.temporalKindFromName(name);
+      if (kind) upscalerFiles.push({ path: full, kind });
+    }
     if (!/\.exe$/i.test(name) || NOT_A_GAME_EXE.test(name) || AUXILIARY_EXE.test(name)) return;
     let size = 0;
     try { size = fs.statSync(full).size; } catch {}
     exes.push({ path: full, name, depth, size });
   }, 8);
-  return { exes, dlss };
+  return { exes, upscalerFiles };
 }
 
 async function candidatesFor(entry) {
-  const { exes, dlss } = await scanEntry(entry);
+  const { exes, upscalerFiles } = await scanEntry(entry);
   const folder = path.basename(entry.dir).toLowerCase().replace(/[^a-z0-9]+/g, '');
   const inspected = [];
   // Inspect likely game binaries first if a folder contains hundreds of tools.
@@ -117,10 +121,15 @@ async function candidatesFor(entry) {
       score -= 22; reasons.push('nameMatch');
     }
     if (item.size > 0) score -= Math.min(18, Math.log2(Math.max(1, item.size / (1024 * 1024))) * 3);
-    if (dlss.length) {
-      const nearest = Math.min(...dlss.map(file => pathDistance(path.dirname(item.path), path.dirname(file))));
+    if (upscalerFiles.length) {
+      const nearest = Math.min(...upscalerFiles.map(file => pathDistance(path.dirname(item.path), path.dirname(file.path))));
       score += nearest * 11;
-      if (nearest <= 2) reasons.push('nearDlss');
+      if (nearest <= 2) {
+        const kinds = [...new Set(upscalerFiles
+          .filter(file => pathDistance(path.dirname(item.path), path.dirname(file.path)) <= 2)
+          .map(file => file.kind))];
+        reasons.push(...kinds.map(kind => `near${kind.toUpperCase()}`));
+      }
     }
     inspected.push({
       path: item.path, name: item.name, relativePath: path.relative(entry.dir, item.path),
