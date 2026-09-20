@@ -111,9 +111,9 @@ test('standalone packaging has its own DLSS 5 product identity and entry point',
   const pkg = JSON.parse(read('package.json'));
   const config = JSON.parse(read('standalone/electron-builder.json'));
   assert.equal(pkg.scripts['build:standalone:portable'], 'electron-builder --config standalone/electron-builder.json --win portable');
-  assert.equal(config.productName, 'DLSS5 Pre-SR Manager');
-  assert.equal(config.appId, 'com.neosixon.dlss5presrmanager');
-  assert.equal(config.extraMetadata.name, 'dlss5-presr-manager');
+  assert.equal(config.productName, 'DLSS5 Before Upscaling');
+  assert.equal(config.appId, 'com.neosixon.dlss5beforeupscaling');
+  assert.equal(config.extraMetadata.name, 'dlss5-before-upscaling');
   assert.equal(config.extraMetadata.version, '0.1.0');
   assert.equal(config.extraMetadata.main, 'standalone/main.js');
   assert.deepEqual(config.win.target, ['portable']);
@@ -121,18 +121,18 @@ test('standalone packaging has its own DLSS 5 product identity and entry point',
   assert.doesNotMatch(config.files.join('\n'), /src\/\*\*/);
 });
 
-test('standalone shell uses the DLSS5 + Pre-SR Manager wordmark', () => {
+test('standalone shell uses the DLSS5 + Before Upscaling wordmark', () => {
   const html = read('standalone/renderer/index.html');
   const theme = read('standalone/renderer/nvidia-ui.css');
   const ux = read('standalone/renderer/ux-fixes.js');
   assert.match(html, /class="brand-dlss">DLSS/);
   assert.match(html, /class="brand-five">5/);
-  assert.match(html, /class="brand-subtitle">Pre-SR Manager/);
-  assert.match(html, /aria-label="DLSS5 Pre-SR Manager"/);
+  assert.match(html, /class="brand-subtitle">Before Upscaling/);
+  assert.match(html, /aria-label="DLSS5 Before Upscaling"/);
   assert.match(theme, /\.brand-dlss:after/);
   assert.match(theme, /background:var\(--accent\)/);
   assert.match(theme, /\.brand-five\{[^}]*color:var\(--accent\)/);
-  assert.match(ux, /subtitle\.textContent = 'Pre-SR Manager'/);
+  assert.match(ux, /subtitle\.textContent = 'Before Upscaling'/);
   assert.doesNotMatch(html, /class="brand-mark"/);
   assert.doesNotMatch(html, />NR</);
 });
@@ -146,7 +146,7 @@ test('standalone build generates the approved vector 5 Manager application icon'
   assert.equal(pkg.scripts['prebuild:standalone:portable'], 'npm run icon:standalone');
   assert.equal(pkg.scripts['prestart:standalone'], 'npm run icon:standalone');
   assert.match(main, /renderer['"], 'app-icon\.png/);
-  assert.match(iconScript, /DLSS 5 Pre-SR Manager standalone icon/);
+  assert.match(iconScript, /DLSS5 Before Upscaling standalone icon/);
   assert.match(iconScript, /icon-source\.svg/);
   assert.match(iconScript, /transparent: true/);
   assert.match(iconScript, /backgroundColor: '#00000000'/);
@@ -154,7 +154,7 @@ test('standalone build generates the approved vector 5 Manager application icon'
   assert.match(iconScript, /app-icon\.png/);
   assert.match(iconSource, /<rect[^>]+rx="\d+"[^>]+fill="#0B0D0E"\/>/);
   assert.match(iconSource, /fill="#80C704"/);
-  assert.match(iconSource, />MANAGER<\/text>/);
+  assert.match(iconSource, />BEFORE UPSCALING<\/text>/);
 });
 
 test('settings includes a Buy Me a Coffee support card with a bundled QR code', () => {

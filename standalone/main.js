@@ -2,7 +2,7 @@
 
 const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const SUPPORT_URL = 'https://buymeacoffee.com/NeoSixon';
-const GITHUB_URL = 'https://github.com/NeoSixon/DLSS5-PreSR-Manager';
+const GITHUB_URL = 'https://github.com/NeoSixon/DLSS5-Before-Upscaling';
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');

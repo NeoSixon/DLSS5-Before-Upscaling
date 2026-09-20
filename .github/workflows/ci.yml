@@ -61,7 +61,7 @@ jobs:
           ref: e237f895623742b761f9e5f00067cb3dc62619f4
           path: _backend
           submodules: recursive
-      - name: Patch DLSS5 Manager in-game overlay
+      - name: Patch DLSS5 Before Upscaling in-game overlay
         run: |
           python scripts/patch-optiscaler-compact-overlay.py _backend
           python scripts/fix-optiscaler-manager-overlay-compile.py _backend
@@ -81,13 +81,13 @@ jobs:
           Copy-Item '_backend/LICENSE' "$dst/OptiScaler-GPL-3.0.txt" -Force
           Copy-Item '_backend/Licenses' "$dst/Licenses" -Recurse -Force
           @"
-          Custom backend for DLSS5 Pre-SR Manager.
+          Custom backend for DLSS5 Before Upscaling.
           Upstream: wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass
           Upstream commit: e237f895623742b761f9e5f00067cb3dc62619f4 (tag v0.7.7)
           Visible menu patch: scripts/patch-optiscaler-compact-overlay.py
           Compile compatibility patch: scripts/fix-optiscaler-manager-overlay-compile.py
           OptiScaler remains licensed under GPL-3.0; see OptiScaler-GPL-3.0.txt.
-          "@ | Set-Content "$dst/DLSS5-MANAGER-BACKEND.txt" -Encoding UTF8
+          "@ | Set-Content "$dst/DLSS5-BEFORE-UPSCALING-BACKEND.txt" -Encoding UTF8
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -103,16 +103,16 @@ jobs:
       - name: Upload Windows preview
         uses: actions/upload-artifact@v4
         with:
-          name: DLSS5-PreSR-Manager-Windows-preview
+          name: DLSS5-Before-Upscaling-Windows-preview
           path: dist-standalone/*portable.exe
           if-no-files-found: error
           retention-days: 14
       - name: Upload backend source patch
         uses: actions/upload-artifact@v4
         with:
-          name: DLSS5-PreSR-Manager-OptiScaler-source-patch
+          name: DLSS5-Before-Upscaling-OptiScaler-source-patch
           path: |
             scripts/patch-optiscaler-compact-overlay.py
             scripts/fix-optiscaler-manager-overlay-compile.py
-            standalone/backend-payload/DLSS5-MANAGER-BACKEND.txt
+            standalone/backend-payload/DLSS5-BEFORE-UPSCALING-BACKEND.txt
           retention-days: 14

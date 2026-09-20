@@ -1,25 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Transparent canvas; only the rounded tile is opaque. -->
-  <rect x="96" y="96" width="832" height="832" rx="184" fill="#0B0D0E"/>
+  <!-- DLSS5 Before Upscaling: flat vector application icon. -->
+  <rect x="64" y="64" width="896" height="896" rx="190" fill="#0B0D0E"/>
 
-  <!-- Primary 5 mark. Kept deliberately higher/smaller so the complete
-       5 / MANAGER lockup remains legible in Windows Explorer icon sizes. -->
-  <path d="M340 180H770L733 278H447L423 365H578
-           C704 365 774 432 774 532
-           C774 648 681 704 548 704H292L338 611H548
-           C622 611 670 584 670 532
-           C670 485 634 460 570 460H292L365 180Z"
+  <!-- Bold 5 mark -->
+  <path d="M326 154H764L728 250H431L408 342H575
+           C702 342 777 409 777 511
+           C777 559 763 601 736 634
+           C709 666 668 688 613 700
+           L572 607
+           C635 597 672 568 672 516
+           C672 468 636 440 569 440H294L368 154Z"
         fill="#80C704"/>
 
-  <text x="512" y="808"
+  <!-- Upward sweep integrated into the lower-right of the 5 -->
+  <path d="M306 546H472
+           C520 616 569 647 625 638
+           C674 630 711 596 737 540
+           L696 515L829 490L806 625L766 592
+           C727 681 660 731 571 741
+           C489 750 411 724 342 662
+           Z"
+        fill="#80C704"/>
+
+  <text x="512" y="838"
         text-anchor="middle"
         fill="#F4F6F7"
         font-family="Segoe UI, Arial, sans-serif"
-        font-size="96"
+        font-size="118"
         font-weight="800"
-        letter-spacing="8"
-        textLength="460"
-        lengthAdjust="spacingAndGlyphs">MANAGER</text>
+        letter-spacing="7"
+        textLength="525"
+        lengthAdjust="spacingAndGlyphs">DLSS</text>
 
-  <path d="M300 848H724L700 876H300Z" fill="#80C704"/>
+  <text x="512" y="895"
+        text-anchor="middle"
+        fill="#80C704"
+        font-family="Segoe UI, Arial, sans-serif"
+        font-size="41"
+        font-weight="800"
+        letter-spacing="7"
+        textLength="560"
+        lengthAdjust="spacingAndGlyphs">BEFORE UPSCALING</text>
 </svg>

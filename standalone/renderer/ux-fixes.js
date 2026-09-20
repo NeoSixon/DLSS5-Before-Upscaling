@@ -12,7 +12,7 @@
 
   document.querySelector('.sidebar-foot')?.remove();
   document.querySelector('#page-settings .page-heading p')?.remove();
-  document.title = 'DLSS5 Pre-SR Manager';
+  document.title = 'DLSS5 Before Upscaling';
 
   const brandDlss = document.querySelector('.brand-dlss');
   const brandFive = document.querySelector('.brand-five');
@@ -59,7 +59,7 @@
   };
 
   const strings = () => state.language === 'zh-CN' ? {
-    subtitle: 'Pre-SR 管理器', homeHeadline: '主页',
+    subtitle: 'Before Upscaling', homeHeadline: '主页',
     homeDescription: '',
     currentGame: '当前游戏', favorites: '收藏',
     library: '游戏库', viewAll: '游戏库',
@@ -76,7 +76,7 @@
     positions: ['左上', '右上', '左下', '右下'],
     overlayNote: '快捷键和显示参数会写入已安装游戏。更改快捷键后请重新启动游戏。'
   } : {
-    subtitle: 'Pre-SR Manager', homeHeadline: 'Home',
+    subtitle: 'Before Upscaling', homeHeadline: 'Home',
     homeDescription: '',
     currentGame: 'Current game', favorites: 'Favorites',
     library: 'Library', viewAll: 'Library',
@@ -99,7 +99,7 @@
 
   function paintBrand() {
     const subtitle = document.querySelector('.brand-subtitle');
-    if (subtitle) subtitle.textContent = 'Pre-SR Manager';
+    if (subtitle) subtitle.textContent = 'Before Upscaling';
   }
 
   // Keep the language control as the native dropdown from index.html.

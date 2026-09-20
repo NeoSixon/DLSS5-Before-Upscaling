@@ -1,6 +1,6 @@
 {
-  "appId": "com.neosixon.dlss5presrmanager",
-  "productName": "DLSS5 Pre-SR Manager",
+  "appId": "com.neosixon.dlss5beforeupscaling",
+  "productName": "DLSS5 Before Upscaling",
   "directories": {
     "output": "dist-standalone"
   },
@@ -12,9 +12,9 @@
     "!standalone/electron-builder.json"
   ],
   "extraMetadata": {
-    "name": "dlss5-presr-manager",
+    "name": "dlss5-before-upscaling",
     "version": "0.1.0",
-    "description": "Standalone manager for DLSS 5 Neural Rendering, Pre-SR placement and OptiScaler model-pass profiles",
+    "description": "Configure DLSS 5 Neural Rendering before the upscaling stage.",
     "main": "standalone/main.js",
     "author": "NeoSixon",
     "license": "MIT"
@@ -26,6 +26,6 @@
     "icon": "build/icon.ico"
   },
   "portable": {
-    "artifactName": "DLSS5-PreSR-Manager-${version}-portable.${ext}"
+    "artifactName": "DLSS5-Before-Upscaling.${ext}"
   }
 }

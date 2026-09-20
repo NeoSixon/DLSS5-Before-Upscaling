@@ -1,8 +1,8 @@
 {
-  "name": "dlss5-presr-manager",
+  "name": "dlss5-before-upscaling",
   "version": "0.1.0",
   "private": true,
-  "description": "DLSS5 Pre-SR Manager desktop application",
+  "description": "Configure DLSS 5 Neural Rendering before the upscaling stage.",
   "main": "main.js",
   "author": "NeoSixon",
   "license": "MIT",

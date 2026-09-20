@@ -1,6 +1,6 @@
 'use strict';
-// DLSS 5 Pre-SR Manager standalone icon.
-// Render the approved flat 5 / MANAGER mark from vector artwork so every ICO
+// DLSS5 Before Upscaling standalone icon.
+// Render the approved flat 5 / upscaling mark from vector artwork so every ICO
 // size is generated from a clean 1024px source with true transparent corners.
 
 const { app, BrowserWindow } = require('electron');
@@ -74,7 +74,7 @@ app.whenReady().then(async () => {
   fs.writeFileSync(path.join(OUT_DIR, 'icon.png'), source.toPNG());
   fs.writeFileSync(WINDOW_ICON, source.resize({ width: 256, height: 256, quality: 'best' }).toPNG());
 
-  console.log('wrote vector 5/MANAGER standalone icon with transparent rounded corners');
+  console.log('wrote DLSS5 Before Upscaling vector icon with transparent rounded corners');
   app.quit();
 }).catch(error => {
   console.error(error);

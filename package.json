@@ -1,7 +1,7 @@
 {
-  "name": "dlss5-presr-manager",
+  "name": "dlss5-before-upscaling",
   "version": "0.1.0",
-  "description": "Standalone Windows manager for DLSS 5 Neural Rendering and Pre-SR profiles",
+  "description": "Configure DLSS 5 Neural Rendering before the upscaling stage.",
   "main": "standalone/main.js",
   "scripts": {
     "start": "npm run start:standalone",
