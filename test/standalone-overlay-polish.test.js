@@ -144,7 +144,7 @@ test('manager overlay reports v0.8.5 NR status or waits for temporal evaluate', 
   assert.match(fix, /DlssNr::ReadStatus\(DlssNr::Backend::Dx12\)/);
   assert.match(fix, /DlssNr::ReadStatus\(DlssNr::Backend::Vulkan\)/);
   assert.match(fix, /failureReason/);
-  assert.match(fix, /NR inactive - waiting for temporal evaluate/);
+  assert.match(fix, /NR inactive - enable DLSS \/ FSR \/ XeSS in the game/);
 });
 
 test('legacy NGX C evaluate entry points are bridged into the managed backend', () => {
