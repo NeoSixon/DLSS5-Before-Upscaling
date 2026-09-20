@@ -68,7 +68,7 @@
     master: '启用 DLSS5', masterBody: '控制该游戏是否启用 DLSS5 神经渲染。',
     sectionTitle: 'DLSS5 神经渲染', detected: '已检测到现有安装', detectedButton: '迁移并安装',
     info: 'Pre-SR 工作原理', rescan: '扫描游戏', saved: '设置已保存。', launch: '开始游戏', launching: '正在启动游戏…',
-    compatible: '兼容', notCompatible: '不兼容', configured: '已配置', all: '全部', compatibleFilter: '兼容 DLSS 5', configuredFilter: '已配置',
+    compatible: '兼容', notCompatible: '不兼容', checking: '检查中…', configured: '已配置', all: '全部', compatibleFilter: '兼容 DLSS 5', configuredFilter: '已配置',
     unsupportedTitle: '未检测到可用的 DLSS 5 路径',
     unsupportedBody: '这个已安装游戏会保留在游戏库里，但当前没有检测到原生 DLSS、64 位主程序和受支持渲染 API 的完整组合。',
     overlayTitle: '游戏内面板', overlayBody: '',
@@ -85,7 +85,7 @@
     master: 'Enable Neural Rendering', masterBody: 'Turn Neural Rendering off without removing OptiScaler or runtime files.',
     sectionTitle: 'DLSS 5 Neural Rendering', detected: 'Existing NR detected', detectedButton: 'Migrate & install',
     info: 'How Pre-SR works', rescan: 'Scan games', saved: 'Settings saved.', launch: 'Play', launching: 'Launching game…',
-    compatible: 'Compatible', notCompatible: 'Not compatible', configured: 'Configured', all: 'All', compatibleFilter: 'DLSS 5 compatible', configuredFilter: 'Configured',
+    compatible: 'Compatible', notCompatible: 'Not compatible', checking: 'Checking…', configured: 'Configured', all: 'All', compatibleFilter: 'DLSS 5 compatible', configuredFilter: 'Configured',
     unsupportedTitle: 'No usable DLSS 5 path detected',
     unsupportedBody: 'This installed game stays in your library, but the app did not detect the full combination of native DLSS, a 64-bit main executable and a supported rendering API.',
     overlayTitle: 'In-game overlay', overlayBody: 'Use the compact DLSS 5 panel instead of the full OptiScaler menu.',
@@ -220,7 +220,7 @@
     const title = document.createElement('b'); title.textContent = gameTitle(game);
     const meta = document.createElement('small');
     const copy = strings();
-    meta.textContent = [game.launcher, isConfigured(game) ? copy.configured : (isCompatible(game) ? copy.compatible : copy.notCompatible)].filter(Boolean).join(' · ');
+    meta.textContent = [game.launcher, game.cachedOnly ? copy.checking : (isConfigured(game) ? copy.configured : (isCompatible(game) ? copy.compatible : copy.notCompatible))].filter(Boolean).join(' · ');
     text.append(title, meta); card.append(art, shade, text);
     card.addEventListener('click', () => openGame(game));
     return card;
