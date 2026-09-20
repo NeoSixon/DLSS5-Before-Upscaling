@@ -22,29 +22,59 @@ function steamCacheRoot(entry) {
   return path.join(entry.steamRoot, 'appcache', 'librarycache');
 }
 
+function artworkInDirectory(dir, names) {
+  const exact = firstExisting(names.map(name => path.join(dir, name)));
+  if (exact) return exact;
+
+  // Steam may only cache the active localized asset, e.g.
+  // library_capsule_schinese.jpg or library_hero_german.jpg.
+  try {
+    const files = fs.readdirSync(dir, { withFileTypes: true }).filter(item => item.isFile());
+    for (const name of names) {
+      const ext = path.extname(name).toLowerCase();
+      const stem = path.basename(name, ext).toLowerCase();
+      const localized = files
+        .map(item => item.name)
+        .filter(fileName => {
+          const lower = fileName.toLowerCase();
+          if (!lower.startsWith(`${stem}_`) || !lower.endsWith(ext)) return false;
+          const suffix = lower.slice(stem.length + 1, -ext.length);
+          if (!suffix) return false;
+          // Do not accidentally substitute blurred or 2x variants for the normal art.
+          return !/(^|_)blur($|_)/.test(suffix) && !/(^|_)2x($|_)/.test(suffix);
+        })
+        .sort((a, b) => a.localeCompare(b))[0];
+      if (localized) return path.join(dir, localized);
+    }
+  } catch {}
+  return null;
+}
+
+function recursiveSteamArtwork(dir, names, depth = 0) {
+  const found = artworkInDirectory(dir, names);
+  if (found) return found;
+  if (depth >= 3) return null;
+  try {
+    const dirs = fs.readdirSync(dir, { withFileTypes: true }).filter(item => item.isDirectory());
+    for (const child of dirs) {
+      const nested = recursiveSteamArtwork(path.join(dir, child.name), names, depth + 1);
+      if (nested) return nested;
+    }
+  } catch {}
+  return null;
+}
+
 function nestedSteamArtwork(entry, names) {
   const root = steamCacheRoot(entry);
   if (!root) return null;
   const appDir = path.join(root, String(entry.id));
-  const direct = firstExisting(names.map(name => path.join(appDir, name)));
-  if (direct) return direct;
 
-  // Steam's current cache can nest artwork below content-hash directories.
-  try {
-    const dirs = fs.readdirSync(appDir, { withFileTypes: true }).filter(item => item.isDirectory());
-    for (const dir of dirs) {
-      const nested = firstExisting(names.map(name => path.join(appDir, dir.name, name)));
-      if (nested) return nested;
-      try {
-        for (const child of fs.readdirSync(path.join(appDir, dir.name), { withFileTypes: true })) {
-          if (!child.isDirectory()) continue;
-          const deeper = firstExisting(names.map(name => path.join(appDir, dir.name, child.name, name)));
-          if (deeper) return deeper;
-        }
-      } catch {}
-    }
-  } catch {}
+  // Modern Steam library assets are commonly under per-asset SHA1 directories,
+  // and localized clients can cache only the localized filename.
+  const modern = recursiveSteamArtwork(appDir, names);
+  if (modern) return modern;
 
+  // Keep compatibility with Steam's older flat librarycache layout.
   return firstExisting(names.map(name => path.join(root, `${entry.id}_${name}`)));
 }
 
