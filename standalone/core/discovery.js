@@ -128,7 +128,8 @@ async function candidatesFor(entry) {
         const kinds = [...new Set(upscalerFiles
           .filter(file => pathDistance(path.dirname(item.path), path.dirname(file.path)) <= 2)
           .map(file => file.kind))];
-        reasons.push(...kinds.map(kind => `near${kind.toUpperCase()}`));
+        const reasonName = kind => kind === 'dlss' ? 'nearDlss' : `near${kind.toUpperCase()}`;
+        reasons.push(...kinds.map(reasonName));
       }
     }
     inspected.push({
