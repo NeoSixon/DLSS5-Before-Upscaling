@@ -135,7 +135,8 @@ function configure(text, target, settings = {}, route = null) {
     ['Inputs', 'UseFfxInputs', 'true'],
     ['Inputs', 'EnableHotSwapping', 'false'],
     ['Inputs', 'Fsr2Pattern', route?.id === 'auto-probe' ? 'true' : 'false'],
-    ['Inputs', 'Fsr3Pattern', route?.id === 'auto-probe' ? 'true' : 'false']
+    ['Inputs', 'Fsr3Pattern', route?.id === 'auto-probe' ? 'true' : 'false'],
+    ['Libraries', 'NvngxDlssPath', ['temporal-presr', 'auto-probe'].includes(route?.id) ? 'nvngx_dlss.dll' : 'auto']
   ];
   for (const [section, key, value] of values) out = ini.set(out, section, key, value);
 
@@ -174,15 +175,26 @@ function checkConflicts(gameDir, exePath, api) {
   if (fs.existsSync(optiDir)) throw fail('installConflict', `Conflicting pre-existing OptiScaler folder: ${optiDir}`);
 }
 
-async function install({ gameDir, exePath, api, apiLabel, packageRoot, runtimePath, settings, route = null, replaceExisting = false }, onLog) {
+async function install({ gameDir, exePath, api, apiLabel, packageRoot, runtimePath, srRuntimePath = null, settings, route = null, replaceExisting = false }, onLog) {
   const log = (code, params = {}) => onLog && onLog({ code, params });
   validatePackage(packageRoot);
   if (!runtimePath || !fs.existsSync(runtimePath)) throw fail('runtimeRequired', 'Neural Rendering runtime is missing.');
+  const needsManagedSr = ['temporal-presr', 'auto-probe'].includes(route?.id);
+  if (needsManagedSr && (!srRuntimePath || !fs.existsSync(srRuntimePath))) {
+    throw fail('srRuntimeRequired', 'DLSS Super Resolution runtime is missing for this temporal route.');
+  }
   await gameProcess.assertNotRunning(exePath);
   if (!replaceExisting) checkConflicts(gameDir, exePath, api);
 
   const manifest = fileState.beginManifest(gameDir, exePath, api);
-  manifest.optiscaler = { version: RELEASE.packageId, upstreamVersion: RELEASE.version, hook: hookFor(api), inputRoute: route?.id || null, migratedExisting: Boolean(replaceExisting) };
+  manifest.optiscaler = {
+    version: RELEASE.packageId,
+    upstreamVersion: RELEASE.version,
+    hook: hookFor(api),
+    inputRoute: route?.id || null,
+    srRuntimeVersion: needsManagedSr && srRuntimePath ? pe.getFileVersion(srRuntimePath) : null,
+    migratedExisting: Boolean(replaceExisting)
+  };
   manifest.game.bitness = 64;
   manifest.game.apiLabel = apiLabel || api;
   await fileState.saveManifest(gameDir, manifest);
@@ -192,6 +204,16 @@ async function install({ gameDir, exePath, api, apiLabel, packageRoot, runtimePa
     for (const item of copyPlan(packageRoot, api)) {
       const rel = await fileState.copyTracked(manifest, gameDir, item.from, path.join(exeDir, item.to), { kind: 'optiscaler' });
       log('added', { rel });
+    }
+
+    if (needsManagedSr) {
+      const srTarget = path.join(exeDir, 'nvngx_dlss.dll');
+      if (fs.existsSync(srTarget)) {
+        log('runtimeKept', { rel: path.relative(gameDir, srTarget) });
+      } else {
+        const rel = await fileState.copyTracked(manifest, gameDir, srRuntimePath, srTarget, { kind: 'dlss-sr-runtime' });
+        log('added', { rel });
+      }
     }
 
     const runtimeTarget = path.join(exeDir, 'nvngx_dlssnr.dll');
