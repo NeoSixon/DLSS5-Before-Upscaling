@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('nrApp', Object.freeze({
   setSteamGridDbKey: key => ipcRenderer.invoke('artwork:set-steamgriddb-key', key),
   openSteamGridDbKey: () => ipcRenderer.invoke('artwork:open-steamgriddb-key'),
   refreshNonSteamArtwork: () => ipcRenderer.invoke('artwork:refresh-non-steam'),
+  repairArtwork: id => ipcRenderer.invoke('artwork:repair-game', id),
   onArtworkUpdated: callback => {
     if (typeof callback !== 'function') return;
     ipcRenderer.on('artwork:updated', (_event, payload) => callback(payload));
