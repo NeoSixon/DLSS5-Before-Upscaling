@@ -45,6 +45,7 @@ jobs:
           node --check scripts/test-standalone-library-ui.js
           python -m py_compile scripts/patch-optiscaler-compact-overlay.py
           python -m py_compile scripts/fix-optiscaler-manager-overlay-compile.py
+          python -m py_compile scripts/patch-optiscaler-legacy-ngx-evaluate.py
       - name: Unit and renderer tests
         run: npm test
 
@@ -65,6 +66,7 @@ jobs:
         run: |
           python scripts/patch-optiscaler-compact-overlay.py _backend
           python scripts/fix-optiscaler-manager-overlay-compile.py _backend
+          python scripts/patch-optiscaler-legacy-ngx-evaluate.py _backend
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Build custom OptiScaler backend
@@ -86,6 +88,7 @@ jobs:
           Upstream commit: e237f895623742b761f9e5f00067cb3dc62619f4 (tag v0.7.7)
           Visible menu patch: scripts/patch-optiscaler-compact-overlay.py
           Compile compatibility patch: scripts/fix-optiscaler-manager-overlay-compile.py
+          Legacy NGX evaluate compatibility patch: scripts/patch-optiscaler-legacy-ngx-evaluate.py
           OptiScaler remains licensed under GPL-3.0; see OptiScaler-GPL-3.0.txt.
           "@ | Set-Content "$dst/DLSS5-BEFORE-UPSCALING-BACKEND.txt" -Encoding UTF8
       - name: Setup Node
@@ -114,5 +117,6 @@ jobs:
           path: |
             scripts/patch-optiscaler-compact-overlay.py
             scripts/fix-optiscaler-manager-overlay-compile.py
+            scripts/patch-optiscaler-legacy-ngx-evaluate.py
             standalone/backend-payload/DLSS5-BEFORE-UPSCALING-BACKEND.txt
           retention-days: 14

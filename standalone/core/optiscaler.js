@@ -12,7 +12,7 @@ const gameProcess = require('./game-process');
 
 const RELEASE = Object.freeze({
   version: '0.7.7',
-  packageId: '0.7.7-dlss5mgr22',
+  packageId: '0.7.7-dlss5mgr23',
   url: 'https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass/releases/download/v0.7.7/OptiScaler-DLSSNR-v0.7.7.zip',
   sha256: '4a315a3b3ee495631bd7cb1f562f609af577443602e507bfc7a7e6749c296258',
   readme: 'INSTALL-DLSSNR.md',

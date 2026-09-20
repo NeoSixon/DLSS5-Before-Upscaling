@@ -60,12 +60,12 @@ test('desktop language is mirrored into managed in-game overlays with CJK glyph 
   assert.match(compat, /overlayLanguageError/);
 });
 
-test('manager backend revision is mgr22 everywhere user-facing update detection relies on it', () => {
+test('manager backend revision is mgr23 everywhere user-facing update detection relies on it', () => {
   for (const rel of [
     'standalone/core/optiscaler.js',
     'standalone/renderer/home-compat.js'
   ]) {
-    assert.match(read(rel), /0\.7\.7-dlss5mgr22/, `${rel} should use mgr22`);
+    assert.match(read(rel), /0\.7\.7-dlss5mgr23/, `${rel} should use mgr23`);
   }
 });
 
@@ -141,7 +141,17 @@ test('advanced restore controls are contextual instead of always-visible Reset b
 });
 
 
-test('manager overlay distinguishes a loaded menu from an active Neural Rendering path', () => {
-  const patch = read('scripts/patch-optiscaler-compact-overlay.py');
-  assert.match(patch, /NR inactive - waiting for supported DLSS path/);
+test('manager overlay reports a concrete failure or waits for the DLSS evaluate call', () => {
+  const fix = read('scripts/fix-optiscaler-manager-overlay-compile.py');
+  assert.match(fix, /DlssNr::FailureReason\(\)/);
+  assert.match(fix, /NR inactive - waiting for DLSS evaluate/);
+});
+
+test('legacy NGX C evaluate entry points are bridged into the managed backend', () => {
+  const patch = read('scripts/patch-optiscaler-legacy-ngx-evaluate.py');
+  assert.match(patch, /NVSDK_NGX_D3D12_EvaluateFeature_C/);
+  assert.match(patch, /NVSDK_NGX_D3D11_EvaluateFeature_C/);
+  assert.match(patch, /D3D12 C EvaluateFeature entry active/);
+  assert.match(patch, /D3D12 EvaluateFeature reached/);
+  assert.match(patch, /const_cast<NVSDK_NGX_Parameter\*>/);
 });
