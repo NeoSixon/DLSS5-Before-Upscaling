@@ -60,12 +60,12 @@ test('desktop language is mirrored into managed in-game overlays with CJK glyph 
   assert.match(compat, /overlayLanguageError/);
 });
 
-test('manager backend revision is mgr26 everywhere user-facing update detection relies on it', () => {
+test('manager backend revision is mgr27 everywhere user-facing update detection relies on it', () => {
   for (const rel of [
     'standalone/core/optiscaler.js',
     'standalone/renderer/home-compat.js'
   ]) {
-    assert.match(read(rel), /0\.7\.7-dlss5mgr26/, `${rel} should use mgr26`);
+    assert.match(read(rel), /0\.7\.7-dlss5mgr27/, `${rel} should use mgr27`);
   }
 });
 
@@ -185,4 +185,15 @@ test('managed backend scans every loaded NGX layer for D3D12 evaluate calls', ()
   assert.match(patch, /Dlss5OwnsDx12Handle/);
   assert.match(patch, /NGX evaluate layer scan complete/);
   assert.match(patch, /NGX layer \{\} D3D12 EvaluateFeature intercepted managed handle/);
+});
+
+
+test('Death Stranding NGX procedure resolution is redirected before per-frame evaluate', () => {
+  const patch = read('scripts/patch-optiscaler-ngx-proc-resolution.py');
+  assert.match(patch, /hk_K32_GetProcAddress/);
+  assert.match(patch, /hk_KB_GetProcAddress/);
+  assert.match(patch, /LdrGetProcedureAddress/);
+  assert.match(patch, /NVSDK_NGX_D3D12_EvaluateFeature_C/);
+  assert.match(patch, /Death Stranding NGX GetProcAddress redirected to OptiScaler/);
+  assert.match(patch, /Death Stranding LdrGetProcedureAddress redirected to OptiScaler/);
 });

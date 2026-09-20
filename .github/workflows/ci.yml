@@ -47,6 +47,7 @@ jobs:
           python -m py_compile scripts/fix-optiscaler-manager-overlay-compile.py
           python -m py_compile scripts/patch-optiscaler-legacy-ngx-evaluate.py
           python -m py_compile scripts/patch-optiscaler-ngx-layer-evaluate.py
+          python -m py_compile scripts/patch-optiscaler-ngx-proc-resolution.py
       - name: Unit and renderer tests
         run: npm test
 
@@ -69,6 +70,7 @@ jobs:
           python scripts/fix-optiscaler-manager-overlay-compile.py _backend
           python scripts/patch-optiscaler-legacy-ngx-evaluate.py _backend
           python scripts/patch-optiscaler-ngx-layer-evaluate.py _backend
+          python scripts/patch-optiscaler-ngx-proc-resolution.py _backend
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Build custom OptiScaler backend
@@ -92,6 +94,7 @@ jobs:
           Compile compatibility patch: scripts/fix-optiscaler-manager-overlay-compile.py
           Legacy NGX evaluate compatibility patch: scripts/patch-optiscaler-legacy-ngx-evaluate.py
           Multi-layer NGX evaluate routing patch: scripts/patch-optiscaler-ngx-layer-evaluate.py
+          Death Stranding NGX proc-resolution patch: scripts/patch-optiscaler-ngx-proc-resolution.py
           OptiScaler remains licensed under GPL-3.0; see OptiScaler-GPL-3.0.txt.
           "@ | Set-Content "$dst/DLSS5-BEFORE-UPSCALING-BACKEND.txt" -Encoding UTF8
       - name: Setup Node
@@ -122,5 +125,6 @@ jobs:
             scripts/fix-optiscaler-manager-overlay-compile.py
             scripts/patch-optiscaler-legacy-ngx-evaluate.py
             scripts/patch-optiscaler-ngx-layer-evaluate.py
+            scripts/patch-optiscaler-ngx-proc-resolution.py
             standalone/backend-payload/DLSS5-BEFORE-UPSCALING-BACKEND.txt
           retention-days: 14
