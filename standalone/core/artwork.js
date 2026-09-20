@@ -167,13 +167,16 @@ function acceptableImage(image) {
 
 function imageScore(image, kind) {
   if (!acceptableImage(image)) return -Infinity;
-  let score = Number(image?.score || 0) * 5;
+  // Community score is useful, but style is more important here: a highly
+  // upvoted blurred/material redesign should not outrank a normal cover-like
+  // image when the goal is to stay close to official storefront artwork.
+  let score = Math.min(100, Math.max(-20, Number(image?.score || 0))) * 1.2;
   const style = String(image?.style || '').toLowerCase();
-  if (style === 'alternate') score += 55;
-  if (style === 'no_logo') score += kind === 'hero' ? 18 : -4;
-  if (style === 'white_logo') score -= 8;
-  if (style === 'material') score -= 18;
-  if (style === 'blurred') score -= 28;
+  if (style === 'alternate') score += 80;
+  if (style === 'no_logo') score += kind === 'hero' ? 22 : -6;
+  if (style === 'white_logo') score -= 12;
+  if (style === 'material') score -= 30;
+  if (style === 'blurred') score -= 42;
   if (image?.mime === 'image/jpeg' || image?.mime === 'image/png' || image?.mime === 'image/webp') score += 5;
   if (image?.width && image?.height) {
     const ratio = Number(image.width) / Math.max(1, Number(image.height));
