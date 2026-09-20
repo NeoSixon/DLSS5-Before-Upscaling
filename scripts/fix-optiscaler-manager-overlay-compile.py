@@ -222,9 +222,9 @@ def main() -> int:
         ImGui::Spacing();
         if (primaryStyleCombo(tr("Pass 1 style", "第 1 层风格"), "##ManagerPass1Style", &config->DlssNrStyle))
             changed = true;
-        if (passes >= 2 && optionalStyleCombo(tr("Pass 2 style", "第 2 层风格"), "##ManagerPass2Style", &config->DlssNrPass2Style))
+        if (passes >= 2 && optionalStyleCombo(tr("Pass 2 style", "第 2 层风格"), "##ManagerPass2Style", &config->DlssNrPassOverrides[0].style))
             changed = true;
-        if (passes >= 3 && optionalStyleCombo(tr("Pass 3 style", "第 3 层风格"), "##ManagerPass3Style", &config->DlssNrPass3Style))
+        if (passes >= 3 && optionalStyleCombo(tr("Pass 3 style", "第 3 层风格"), "##ManagerPass3Style", &config->DlssNrPassOverrides[1].style))
             changed = true;'''
     text = replace_once(text, old_styles, new_styles, "style rows")
 
@@ -255,9 +255,6 @@ def main() -> int:
         ('ImGui::Checkbox("Carry Pre-SR edit across Ray Reconstruction", &residualAcrossRr)', 'ImGui::Checkbox(tr("Carry Pre-SR edit across Ray Reconstruction", "将 Pre-SR 编辑保留到光线重建"), &residualAcrossRr)', 'RR residual'),
         ('ImGui::SliderFloat("RR detail accumulation", &rrBlend, 0.01f, 1.0f, "%.2f")', 'ImGui::SliderFloat(tr("RR detail accumulation", "光线重建细节累积"), &rrBlend, 0.01f, 1.0f, "%.2f")', 'RR detail'),
         ('ImGui::Checkbox("Generate before SR, apply after SR", &deferred)', 'ImGui::Checkbox(tr("Generate before SR, apply after SR", "超分前生成，超分后应用"), &deferred)', 'deferred NR'),
-        ('ImGui::Checkbox("NR every second frame with NVIDIA FG", &everySecond)', 'ImGui::Checkbox(tr("NR every second frame with NVIDIA FG", "配合 NVIDIA 帧生成时每隔一帧运行 NR"), &everySecond)', 'every second frame'),
-        ('ImGui::Checkbox("Allow approximate FG camera guides", &approximateCamera)', 'ImGui::Checkbox(tr("Allow approximate FG camera guides", "允许近似的帧生成相机引导"), &approximateCamera)', 'camera guides'),
-        ('ImGui::Combo("Model precision", &precision, precisionNames, IM_ARRAYSIZE(precisionNames))', 'ImGui::Combo(tr("Model precision", "模型精度"), &precision, precisionNames, IM_ARRAYSIZE(precisionNames))', 'model precision'),
         ('ImGui::Combo("HDR mapping", &hdrMode, hdrModes, IM_ARRAYSIZE(hdrModes))', 'ImGui::Combo(tr("HDR mapping", "HDR 映射"), &hdrMode, hdrModes, IM_ARRAYSIZE(hdrModes))', 'HDR mapping'),
     ]
     for old, new, label in replacements:
@@ -378,57 +375,6 @@ def main() -> int:
                 "Compute NR at input resolution, upscale only its changes with DLSS, then apply them after Super Resolution. Experimental: may flicker, adds GPU cost, and does not support Ray Reconstruction.",
                 "在输入分辨率计算 NR，只用 DLSS 放大 NR 产生的变化，再在超分后叠加。属于实验功能：可能闪烁、增加 GPU 开销，并且不支持光线重建。");''',
         "deferred-NR hover help")
-
-    text = replace_once(
-        text,
-        '''            if (ImGui::Checkbox(tr("NR every second frame with NVIDIA FG", "配合 NVIDIA 帧生成时每隔一帧运行 NR"), &everySecond))
-            {
-                config->DlssNrResidualFg = everySecond;
-                changed = true;
-            }''',
-        '''            if (ImGui::Checkbox(tr("NR every second frame with NVIDIA FG", "启用 NVIDIA 帧生成时，每两帧运行一次 NR"), &everySecond))
-            {
-                config->DlssNrResidualFg = everySecond;
-                changed = true;
-            }
-            hoverHelp(
-                "Run NR on every other rendered frame and let NVIDIA Frame Generation interpolate the change. Adds one rendered frame of latency and may misalign effects or UI.",
-                "NR 每隔一个渲染帧运行一次，并由 NVIDIA 帧生成插值其变化。会增加一个渲染帧的延迟，部分效果或 UI 可能出现错位。");''',
-        "FG every-second-frame hover help")
-
-    text = replace_once(
-        text,
-        '''            if (ImGui::Checkbox(tr("Allow approximate FG camera guides", "允许近似的帧生成相机引导"), &approximateCamera))
-            {
-                config->DlssNrResidualFgApproxCamera = approximateCamera;
-                changed = true;
-            }''',
-        '''            if (ImGui::Checkbox(tr("Allow approximate FG camera guides", "允许使用估算相机数据辅助帧生成"), &approximateCamera))
-            {
-                config->DlssNrResidualFgApproxCamera = approximateCamera;
-                changed = true;
-            }
-            hoverHelp(
-                "Use estimated camera data when the game does not provide it. This can help Frame Generation alignment, but may create artifacts during camera movement.",
-                "游戏未提供相机数据时使用估算值辅助帧生成对齐；相机移动时可能产生伪影。");''',
-        "FG camera hover help")
-
-    text = replace_once(
-        text,
-        '''            if (ImGui::Combo(tr("Model precision", "模型精度"), &precision, precisionNames, IM_ARRAYSIZE(precisionNames)))
-            {
-                config->DlssNrPrecision = precision == 1 ? 4u : 0u;
-                changed = true;
-            }''',
-        '''            if (ImGui::Combo(tr("Model precision", "模型精度"), &precision, precisionNames, IM_ARRAYSIZE(precisionNames)))
-            {
-                config->DlssNrPrecision = precision == 1 ? 4u : 0u;
-                changed = true;
-            }
-            hoverHelp(
-                "NVIDIA FP8 is the default model path. FP8 + NVFP4 hybrid is experimental for RTX 50 GPUs; output may differ slightly and loading can briefly pause the game.",
-                "NVIDIA FP8 是默认模型精度。FP8 + NVFP4 混合模式面向 RTX 50，属于实验功能；画面结果可能略有差异，加载时游戏可能短暂停顿。");''',
-        "model-precision hover help")
 
     text = replace_once(
         text,
