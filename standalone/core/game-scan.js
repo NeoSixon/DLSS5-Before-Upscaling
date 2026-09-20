@@ -170,9 +170,14 @@ function installedInfo(gameDir, chosen) {
     path.join(exeDir, 'OptiScaler.ini')
   ];
   const installed = required.every(file => fs.existsSync(file));
+  const srRel = path.relative(gameDir, path.join(exeDir, 'nvngx_dlss.dll'));
+  const managedSr =
+    manifest.added?.some(rel => String(rel).toLowerCase() === srRel.toLowerCase()) ||
+    manifest.replaced?.some(row => String(row.rel).toLowerCase() === srRel.toLowerCase());
   return {
     hasBackup: true,
     installed,
+    managedSr,
     optiscaler: manifest.optiscaler || (manifest.route === 'optiscaler' ? { version: 'unknown', hook: hookName } : null)
   };
 }
@@ -188,7 +193,22 @@ async function inspect(exePath, profile = null) {
     findTemporalInputs(chosen.path)
   ]);
   const install = installedInfo(gameDir, chosen);
-  const route = routePlan.chooseRoute({ chosen, dlss, upscalerInputs });
+  const detectedRoute = routePlan.chooseRoute({
+    chosen,
+    dlss: install.managedSr ? null : dlss,
+    upscalerInputs
+  });
+  let route = detectedRoute;
+  const storedRoute = install.optiscaler?.inputRoute;
+  if (storedRoute && ['native-presr', 'temporal-presr', 'auto-probe'].includes(storedRoute)) {
+    route = {
+      ...detectedRoute,
+      id: storedRoute,
+      ready: storedRoute === 'auto-probe' ? detectedRoute.ready : true,
+      installable: true,
+      source: storedRoute === 'native-presr' ? 'dlss' : (upscalerInputs[0]?.kind || null)
+    };
+  }
   return { gameDir, chosen, dlss, upscalerInputs, route, ...install };
 }
 
