@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DLSS5 Pre-SR Manager</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pass-styles.css" />
+  <link rel="stylesheet" href="liquid-glass.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand" aria-label="DLSS5 Pre-SR Manager">
+        <span class="brand-title"><span class="brand-dlss">DLSS</span><strong class="brand-five">5</strong></span><small class="brand-subtitle">Pre-SR Manager</small>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-page="home"><span>⌂</span><b data-i18n="home">Home</b></button>
+        <button class="nav-item" data-page="games"><span>▦</span><b data-i18n="games">Games</b></button>
+        <button class="nav-item" data-page="settings"><span>⚙</span><b data-i18n="settings">Settings</b></button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="titlebar">
+        <div class="crumb" id="crumb">Home</div>
+        <div class="window-controls">
+          <button id="minBtn">—</button>
+          <button id="maxBtn">□</button>
+          <button id="closeBtn">×</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="page active" id="page-home">
+          <section class="home-scan-card glass-card">
+            <div class="home-scan-copy">
+              <span class="home-kicker">DLSS 5</span>
+              <h1 data-i18n="homeTitle">Find compatible games</h1>
+              <p data-i18n="homeBody">Scan your installed game libraries for native DLSS titles that can use Neural Rendering.</p>
+              <div class="home-actions">
+                <button class="primary" id="homeScanBtn" data-i18n="scanGames">Scan games</button>
+                <button class="ghost" id="homeAddBtn" data-i18n="addGame">Add game</button>
+              </div>
+              <span class="home-scan-status" id="homeScanStatus"></span>
+            </div>
+          </section>
+
+          <section class="home-summary-grid">
+            <div class="home-summary-card">
+              <span data-i18n="compatibleGames">Compatible games</span>
+              <strong id="homeGameCount">0</strong>
+            </div>
+            <div class="home-summary-card">
+              <span data-i18n="installedGames">Neural Rendering installed</span>
+              <strong id="homeInstalledCount">0</strong>
+            </div>
+            <button class="home-summary-card home-open-games" id="homeOpenGamesBtn">
+              <span data-i18n="openLibrary">Open game library</span>
+              <strong>→</strong>
+            </button>
+          </section>
+        </section>
+
+        <section class="page" id="page-games">
+          <div class="page-heading">
+            <div><h1 data-i18n="games">Games</h1><p data-i18n="gamesBody">Games managed by this app.</p></div>
+            <button class="primary compact" id="addGameBtn" data-i18n="addGame">Add game</button>
+          </div>
+          <div class="game-list" id="gameList"></div>
+        </section>
+
+        <section class="page" id="page-game">
+          <div class="game-page-toolbar">
+            <button class="ghost compact" id="gameBackBtn"><span>←</span> <span data-i18n="games">Games</span></button>
+            <button class="ghost compact" id="folderBtn" data-i18n="openGameFolder">Open game folder</button>
+          </div>
+
+          <div id="gameEmptyState" class="empty-state hidden">
+            <div class="empty-icon">▦</div>
+            <h1 data-i18n="noGames">No games yet.</h1>
+          </div>
+
+          <div id="gameDetail" class="hidden">
+            <section class="hero">
+              <div class="hero-copy">
+                <h1 id="gameTitle">Game</h1>
+                <div class="badges" id="badges"></div>
+              </div>
+            </section>
+
+            <section class="game-config-section neural-config-section">
+              <div class="game-config-head">
+                <h2 data-i18n="neuralRendering">DLSS5 Neural Rendering</h2>
+                <span class="state-chip" id="installState">Ready</span>
+              </div>
+              <div class="game-config-body">
+                <div class="setting-row main-setting">
+                  <div>
+                    <strong data-i18n="runBeforeSr">Pre-SR</strong>
+                    <p data-i18n="runBeforeSrBody">Choose whether Neural Rendering runs before or after DLSS Super Resolution.</p>
+                  </div>
+                  <label class="switch">
+                    <input id="presrToggle" type="checkbox" checked />
+                    <span></span>
+                  </label>
+                </div>
+
+                <div class="mode-line">
+                  <span class="mode-badge" id="modeBadge">Pre-SR</span>
+                  <span id="modeText"></span>
+                </div>
+
+                <details class="details-card presr-explainer">
+                  <summary><span data-i18n="howItWorks">How it works</span><span>⌄</span></summary>
+                  <div class="details-content">
+                    <div class="pipeline" id="pipeline"></div>
+                    <p id="pipelineExplain"></p>
+                  </div>
+                </details>
+              </div>
+            </section>
+
+            <section class="game-config-section passes-config-section">
+              <div class="game-config-head"><h2 data-i18n="passes">Passes</h2></div>
+              <div class="game-config-body">
+                <div class="passes-setting-row">
+                  <div>
+                    <strong data-i18n="passesLabel">Pass count</strong>
+                    <p data-i18n="passesBody">Choose how many Neural Rendering passes are used.</p>
+                  </div>
+                  <select id="passesSelect"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+                </div>
+
+                <details class="details-card pass-profiles" id="passStylesDetails">
+                  <summary><span data-i18n="passStyles">Per-pass styles</span><span>⌄</span></summary>
+                  <div class="pass-style-grid">
+                    <div class="pass-card" data-pass-card="1">
+                      <div class="pass-card-head"><b data-i18n="pass1">Pass 1</b><small id="pass1State"></small></div>
+                      <label class="field compact-field"><span data-i18n="style">Style</span><select id="pass1Style"><option value="auto" data-i18n="backendDefault">Default</option><option value="0" data-i18n="standard">Standard</option><option value="1" data-i18n="natural">Natural</option><option value="2" data-i18n="cinematic">Cinematic</option></select></label>
+                    </div>
+                    <div class="pass-card" data-pass-card="2">
+                      <div class="pass-card-head"><b data-i18n="pass2">Pass 2</b><small id="pass2State"></small></div>
+                      <label class="field compact-field"><span data-i18n="style">Style</span><select id="pass2Style"><option value="auto" data-i18n="inheritPass1">Inherit Pass 1</option><option value="0" data-i18n="standard">Standard</option><option value="1" data-i18n="natural">Natural</option><option value="2" data-i18n="cinematic">Cinematic</option></select></label>
+                    </div>
+                    <div class="pass-card" data-pass-card="3">
+                      <div class="pass-card-head"><b data-i18n="pass3">Pass 3</b><small id="pass3State"></small></div>
+                      <label class="field compact-field"><span data-i18n="style">Style</span><select id="pass3Style"><option value="auto" data-i18n="inheritPass1">Inherit Pass 1</option><option value="0" data-i18n="standard">Standard</option><option value="1" data-i18n="natural">Natural</option><option value="2" data-i18n="cinematic">Cinematic</option></select></label>
+                    </div>
+                  </div>
+                  <p class="pass-help" data-i18n="passStylesHelp">Later passes can use their own style. Inherit keeps them linked to Pass 1.</p>
+                </details>
+              </div>
+            </section>
+
+            <section class="game-config-section runtime-config-section">
+              <div class="game-config-head"><h2 data-i18n="installRuntimeTitle">Installation & runtime</h2></div>
+              <div class="game-config-body runtime-config-body">
+                <div class="runtime-config-row">
+                  <div><strong data-i18n="runtime">Neural Runtime</strong><p data-i18n="runtimeBody">Choose or import the Neural Rendering runtime used by this game.</p></div>
+                  <div class="runtime-config-actions"><div class="runtime-status" id="runtimeStatus">—</div><button class="ghost" id="runtimeBtn" data-i18n="importRuntime">Import runtime</button></div>
+                </div>
+                <div class="runtime-config-row">
+                  <div><strong data-i18n="backend">Backend</strong><p>OptiScaler Pre-SR · v0.7.7</p></div>
+                  <div class="runtime-config-actions"><button class="primary install-button" id="installBtn" data-i18n="install">Install Neural Rendering</button><span class="inline-status" id="inlineStatus"></span></div>
+                </div>
+                <div class="runtime-config-row">
+                  <div><strong data-i18n="restoreTitle">Original game files</strong><p data-i18n="restoreBody">Restore the backup created before installation.</p></div>
+                  <div class="runtime-config-actions"><button class="ghost danger" id="restoreBtn" data-i18n="restore">Restore original</button></div>
+                </div>
+                <details class="details-card advanced">
+                  <summary><span data-i18n="advanced">Advanced details</span><span>⌄</span></summary>
+                  <div class="tech-grid" id="techGrid"></div>
+                </details>
+              </div>
+            </section>
+
+            <section class="overlay-tuning-card">
+              <div class="overlay-tuning-icon">▣</div>
+              <div><strong data-i18n="overlayTuneTitle">Tune the image in the in-game panel</strong><p data-i18n="overlayTuneBody">Image-dependent controls are easier to tune while looking at the actual game. Press Insert in game to open the panel.</p></div>
+              <kbd>Insert</kbd>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-settings">
+          <div class="page-heading">
+            <div><h1 data-i18n="settings">Settings</h1><p data-i18n="settingsBody">Keep the interface in one language at a time.</p></div>
+          </div>
+          <section class="glass-card settings-page-card">
+            <label class="field language-field">
+              <span data-i18n="language">Language</span>
+              <select id="languageSelect"><option value="en">English</option><option value="zh-CN">简体中文</option></select>
+            </label>
+            <div class="about-copy">
+              <strong data-i18n="creditsTitle">Credits</strong>
+              <p data-i18n="creditsBody">With thanks to the DLSS5-Swapper and OptiScaler projects.</p>
+            </div>
+          </section>
+
+          <section class="glass-card support-card">
+            <div class="support-copy">
+              <span class="support-kicker">Buy Me a Coffee</span>
+              <h2 data-i18n="supportTitle">Support development</h2>
+              <p data-i18n="supportBody">If this tool is useful to you, you can support continued development on Buy Me a Coffee.</p>
+              <p class="support-hint" data-i18n="supportHint">Scan the QR code or open the page directly.</p>
+              <div class="support-link-row">
+                <button class="ghost support-open" id="supportOpenBtn" type="button" data-url="https://buymeacoffee.com/NeoSixon">
+                  <span>Buy Me a Coffee</span><b aria-hidden="true">↗</b>
+                </button>
+                <button class="ghost support-open support-github" id="supportGithubBtn" type="button">
+                  <span>GitHub</span><b aria-hidden="true">↗</b>
+                </button>
+              </div>
+            </div>
+            <button class="support-qr-button" id="supportQrBtn" type="button" aria-label="Open Buy Me a Coffee">
+              <img src="assets/buymeacoffee-qr.png" alt="Buy Me a Coffee QR code" />
+            </button>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+  <script src="ux-fixes.js"></script>
+  <script src="home-compat.js"></script>
+  <script src="library-dialog.js"></script>
+</body>
+</html>

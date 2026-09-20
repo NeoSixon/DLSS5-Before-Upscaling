@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect x="52" y="52" width="920" height="920" rx="210" fill="#0B0D0E"/>
+  <path d="M352 206H784L744 302H452L426 398H590
+           C720 398 798 468 798 574
+           C798 700 696 760 550 760H300L346 664H548
+           C632 664 688 634 688 576
+           C688 524 648 494 575 494H300L376 206Z"
+        fill="#80C704"/>
+  <text x="512" y="842" text-anchor="middle"
+        fill="#F4F6F7"
+        font-family="Segoe UI Variable Display, Segoe UI, Arial, sans-serif"
+        font-size="80" font-weight="700" letter-spacing="14">MANAGER</text>
+  <path d="M318 885H706L682 909H318Z" fill="#80C704"/>
+</svg>
