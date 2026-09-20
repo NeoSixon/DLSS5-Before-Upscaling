@@ -104,7 +104,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DLSS5-Before-Upscaling-Windows-preview
-          path: dist-standalone/*portable.exe
+          path: dist-standalone/DLSS5-Before-Upscaling.exe
           if-no-files-found: error
           retention-days: 14
       - name: Upload backend source patch
