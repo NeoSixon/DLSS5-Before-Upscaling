@@ -141,10 +141,12 @@ test('advanced restore controls are contextual instead of always-visible Reset b
 });
 
 
-test('manager overlay reports a concrete failure or waits for the DLSS evaluate call', () => {
+test('manager overlay reports v0.8.5 NR status or waits for temporal evaluate', () => {
   const fix = read('scripts/fix-optiscaler-manager-overlay-compile.py');
-  assert.match(fix, /DlssNr::FailureReason\(\)/);
-  assert.match(fix, /NR inactive - waiting for DLSS evaluate/);
+  assert.match(fix, /DlssNr::ReadStatus\(DlssNr::Backend::Dx12\)/);
+  assert.match(fix, /DlssNr::ReadStatus\(DlssNr::Backend::Vulkan\)/);
+  assert.match(fix, /failureReason/);
+  assert.match(fix, /NR inactive - waiting for temporal evaluate/);
 });
 
 test('legacy NGX C evaluate entry points are bridged into the managed backend', () => {
