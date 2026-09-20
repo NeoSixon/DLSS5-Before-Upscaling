@@ -45,3 +45,20 @@ test('an empty folder yields no fabricated executable', async t => {
   assert.equal((await discovery.candidatesFor({ dir })).candidates.length, 0);
   assert.equal(await discovery.candidateFor({ dir }), null);
 });
+
+test('temporal upscaler DLLs influence automatic game executable ranking', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nr-temporal-rank-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  const generic = path.join(dir, 'Tools', 'Generic.exe');
+  const game = path.join(dir, 'Game', 'Binaries', 'Win64', 'Game-Win64-Shipping.exe');
+  writePe(generic, { text: 'D3D12CreateDevice' });
+  writePe(game, { text: 'D3D12CreateDevice' });
+  fs.mkdirSync(path.dirname(game), { recursive: true });
+  fs.writeFileSync(path.join(path.dirname(game), 'ffx_fsr2_api_x64.dll'), 'fixture');
+
+  const result = await discovery.candidatesFor({ dir });
+  assert.equal(result.candidates[0].path, game);
+  assert.ok(result.candidates[0].reasons.includes('nearFSR2'));
+});
+
