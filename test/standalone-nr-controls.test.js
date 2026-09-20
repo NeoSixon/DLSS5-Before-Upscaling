@@ -156,8 +156,9 @@ test('Steam banner discovery supports current nested cache layouts and wide hero
   const discovery = read('standalone/core/discovery.js');
   assert.match(discovery, /library_hero\.jpg/);
   assert.match(discovery, /library_header\.jpg/);
-  assert.match(discovery, /readdirSync\(appDir/);
-  assert.match(discovery, /content-hash directories/);
+  assert.match(discovery, /recursiveSteamArtwork/);
+  assert.match(discovery, /localized asset/);
+  assert.match(discovery, /per-asset SHA1 directories/);
 });
 
 test('non-blocking setting updates no longer pre-render switches back to old state', () => {
