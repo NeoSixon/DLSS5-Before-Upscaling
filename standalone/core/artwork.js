@@ -221,8 +221,8 @@ async function saveImage(url, base, stem) {
   return file;
 }
 
-async function fetchForRecord(app, safeStorage, record) {
-  if (!isNonSteam(record)) return null;
+async function fetchForRecord(app, safeStorage, record, options = {}) {
+  if (!isNonSteam(record) && !options.allowSteamFallback) return null;
   const key = readApiKey(app, safeStorage);
   if (!key) return null;
 
