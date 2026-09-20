@@ -34,8 +34,6 @@ The desktop app handles setup and per-game configuration. Image-dependent tuning
 
 The Windows release is portable: download `DLSS5-Before-Upscaling.exe` and run it directly.
 
-Development builds are also available from **[GitHub Actions](https://github.com/NeoSixon/DLSS5-Before-Upscaling/actions)** after successful CI runs.
-
 > Game compatibility varies by title, rendering path, and game updates.
 
 ## Quick start
@@ -89,7 +87,7 @@ For native DLSS titles, the app uses the detected DLSS path. Where supported, te
 
 **Game library** — Scan installed libraries, add titles manually, search, filter, favorite, hide or remove entries without deleting game files.
 
-**Per-game profiles** — Enable DLSS 5 Neural Rendering, switch Pre-SR placement, choose 1–3 passes, and configure each active pass independently.
+**Per-game profiles** — See the detected rendering API, DLSS version and active route in the game header, then enable Neural Rendering, choose Pre-SR placement, set 1–3 passes, and configure each active pass independently.
 
 **In-game panel** — Press **Insert** while the game is running to tune image-dependent settings against the actual frame.
 
