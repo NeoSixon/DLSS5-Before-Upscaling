@@ -201,7 +201,7 @@ test('Death Stranding NGX procedure resolution is redirected before per-frame ev
 
 test('Death Stranding hooks the DLSS snippet before the loader returns it', () => {
   const patch = read('scripts/patch-optiscaler-early-dlss-evaluate.py');
-  assert.match(patch, /hkLdrLoadDll/);
+  assert.match(patch, /post-LdrLoadDll snippet hook/);
   assert.match(patch, /nvngx_dlss\.dll immediately after load/);
   assert.match(patch, /featureHandle->Id >= 1000000u/);
   assert.match(patch, /early nvngx_dlss\.dll Evaluate intercepted managed handle/);
