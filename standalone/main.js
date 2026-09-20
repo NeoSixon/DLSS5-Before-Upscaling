@@ -453,7 +453,9 @@ ipcMain.handle('games:rescan', () => safeResult(async () => {
 }));
 function addExecutable(exePath, meta = {}) {
   if (!/\.exe$/i.test(exePath) || !fs.statSync(exePath).isFile()) throw new Error('Choose a valid game executable.');
-  const local = discovery.localArtworkFor(meta.libraryDir || path.dirname(exePath));
+  const local = typeof discovery.localArtworkFor === 'function'
+    ? discovery.localArtworkFor(meta.libraryDir || path.dirname(exePath))
+    : { coverPath: null, bannerPath: null, tilePath: null };
   const record = normalizeRecord(exePath, { ...local, ...meta, localArtworkScanned: true });
   const state = loadState();
   const normalizedPath = normalizedExePath(record.exePath);
