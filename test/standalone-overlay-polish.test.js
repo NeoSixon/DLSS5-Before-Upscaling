@@ -60,12 +60,12 @@ test('desktop language is mirrored into managed in-game overlays with CJK glyph 
   assert.match(compat, /overlayLanguageError/);
 });
 
-test('manager backend revision is mgr27 everywhere user-facing update detection relies on it', () => {
+test('manager backend revision is mgr28 everywhere user-facing update detection relies on it', () => {
   for (const rel of [
     'standalone/core/optiscaler.js',
     'standalone/renderer/home-compat.js'
   ]) {
-    assert.match(read(rel), /0\.7\.7-dlss5mgr27/, `${rel} should use mgr27`);
+    assert.match(read(rel), /0\.7\.7-dlss5mgr28/, `${rel} should use mgr28`);
   }
 });
 
@@ -196,4 +196,14 @@ test('Death Stranding NGX procedure resolution is redirected before per-frame ev
   assert.match(patch, /NVSDK_NGX_D3D12_EvaluateFeature_C/);
   assert.match(patch, /Death Stranding NGX GetProcAddress redirected to OptiScaler/);
   assert.match(patch, /Death Stranding LdrGetProcedureAddress redirected to OptiScaler/);
+});
+
+
+test('Death Stranding hooks the DLSS snippet before the loader returns it', () => {
+  const patch = read('scripts/patch-optiscaler-early-dlss-evaluate.py');
+  assert.match(patch, /hkLdrLoadDll/);
+  assert.match(patch, /nvngx_dlss\.dll immediately after load/);
+  assert.match(patch, /featureHandle->Id >= 1000000u/);
+  assert.match(patch, /early nvngx_dlss\.dll Evaluate intercepted managed handle/);
+  assert.match(patch, /early nvngx_dlss\.dll Evaluate_C intercepted managed handle/);
 });
