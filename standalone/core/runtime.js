@@ -62,12 +62,16 @@ function cache(app, source) {
   return dest;
 }
 
-function detect(app, exePath) {
-  const local = path.join(path.dirname(exePath), RUNTIME_NAME);
-  if (looksValid(local)) return { source: 'game', path: local, version: pe.getFileVersion(local) };
+function detectCached(app) {
   const cached = cacheFile(app);
   if (looksValid(cached)) return { source: 'cache', path: cached, version: pe.getFileVersion(cached) };
   return null;
+}
+
+function detect(app, exePath) {
+  const local = path.join(path.dirname(exePath), RUNTIME_NAME);
+  if (looksValid(local)) return { source: 'game', path: local, version: pe.getFileVersion(local) };
+  return detectCached(app);
 }
 
 async function pickAndCache(app, dialog, exePath, language = 'en') {
@@ -92,4 +96,4 @@ async function resolve(app, dialog, exePath, language = 'en') {
   return imported;
 }
 
-module.exports = { RUNTIME_NAME, sha256, looksValid, cacheFile, metadataFile, cache, detect, pickAndCache, resolve };
+module.exports = { RUNTIME_NAME, sha256, looksValid, cacheFile, metadataFile, cache, detectCached, detect, pickAndCache, resolve };

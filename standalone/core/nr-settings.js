@@ -38,6 +38,11 @@ function styleValue(raw, fallback = 'auto') {
   return STYLE_VALUES.has(value) ? value : fallback;
 }
 
+function primaryStyleValue(raw, fallback = '0') {
+  const value = styleValue(raw, fallback);
+  return value === 'auto' ? '0' : value;
+}
+
 function managerLanguage(value) {
   const normalized = String(value || 'en');
   return MANAGER_LANGUAGES.has(normalized) ? normalized : 'en';
@@ -98,7 +103,7 @@ function read(exePath, fallback = {}) {
     enabled: fallback.enabled !== false,
     runBeforeSR: fallback.runBeforeSR !== false,
     passes: Number.isInteger(Number(fallback.passes)) ? Number(fallback.passes) : 1,
-    pass1Style: styleValue(fallback.pass1Style),
+    pass1Style: primaryStyleValue(fallback.pass1Style),
     pass2Style: styleValue(fallback.pass2Style),
     pass3Style: styleValue(fallback.pass3Style)
   };
@@ -111,7 +116,7 @@ function read(exePath, fallback = {}) {
     enabled: boolValue(ini.get(text, 'DlssNr', 'Enabled'), base.enabled),
     runBeforeSR: boolValue(ini.get(text, 'DlssNr', 'RunBeforeSR'), base.runBeforeSR),
     passes: Number.isInteger(parsedPasses) && parsedPasses >= 1 && parsedPasses <= 3 ? parsedPasses : base.passes,
-    pass1Style: styleValue(ini.get(text, 'DlssNr', 'Style'), base.pass1Style),
+    pass1Style: primaryStyleValue(ini.get(text, 'DlssNr', 'Style'), base.pass1Style),
     pass2Style: styleValue(ini.get(text, 'DlssNr', 'Pass2Style'), base.pass2Style),
     pass3Style: styleValue(ini.get(text, 'DlssNr', 'Pass3Style'), base.pass3Style)
   };
@@ -176,7 +181,7 @@ function apply(exePath, settings = {}) {
     ['Enabled', settings.enabled === false ? 'false' : 'true'],
     ['RunBeforeSR', settings.runBeforeSR === false ? 'false' : 'true'],
     ['Passes', String(passes)],
-    ['Style', styleValue(settings.pass1Style)],
+    ['Style', primaryStyleValue(settings.pass1Style)],
     ['Pass2Style', styleValue(settings.pass2Style)],
     ['Pass3Style', styleValue(settings.pass3Style)]
   ];

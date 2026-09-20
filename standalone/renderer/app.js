@@ -11,7 +11,7 @@ const I18N = {
     passes: 'Passes', passesLabel: 'Pass count', passesBody: 'Choose how many Neural Rendering passes are used.', passStyles: 'Per-pass styles', passStylesHelp: 'Later passes can use their own style. Inherit keeps them linked to Pass 1.',
     pass1: 'Pass 1', pass2: 'Pass 2', pass3: 'Pass 3', style: 'Style', backendDefault: 'Default', inheritPass1: 'Inherit Pass 1',
     standard: 'Standard', natural: 'Natural', cinematic: 'Cinematic', activeLayer: 'Active', inactiveLayer: 'Inactive',
-    runtime: 'Neural Runtime', runtimeBody: 'Choose or import the Neural Rendering runtime used by this game.', installRuntimeTitle: 'Installation & runtime', install: 'Install / update backend', importRuntime: 'Import runtime', openGameFolder: 'Open game folder', restoreTitle: 'Original game files', restoreBody: 'Restore the backup created before installation.', restore: 'Restore original', advanced: 'Advanced details', overlayTuneTitle: 'Tune the image in the in-game panel', overlayTuneBody: 'Image-dependent controls are easier to tune while looking at the actual game. Press Insert in game to open the panel.',
+    runtime: 'Neural Runtime', runtimeBody: 'Shared across games. Import nvngx_dlssnr.dll once; managed games receive a local copy during backend installation.', runtimeShared: 'Shared cache', runtimeGameCopy: 'Game copy', installRuntimeTitle: 'Installation & runtime', install: 'Install / update backend', importRuntime: 'Import runtime', openGameFolder: 'Open game folder', restoreTitle: 'Original game files', restoreBody: 'Restore the backup created before installation.', restore: 'Restore original', advanced: 'Advanced details', overlayTuneTitle: 'Tune the image in the in-game panel', overlayTuneBody: 'Image-dependent controls are easier to tune while looking at the actual game. Press Insert in game to open the panel.',
     inGame: 'In game:', keepDlssOn: 'keep DLSS Super Resolution enabled. Quality / Balanced / Performance remains a game setting.',
     gamesBody: 'Compatible games found on this PC.', settingsBody: 'Keep the interface in one language at a time.', language: 'Language', creditsTitle: 'Credits',
     creditsBody: 'With thanks to the DLSS5-Swapper and OptiScaler projects.',
@@ -36,7 +36,7 @@ const I18N = {
     passes: '层数', passesLabel: '叠加层数', passesBody: '选择神经渲染使用 1、2 或 3 层。', passStyles: '每层风格', passStylesHelp: '后续层可以使用不同风格；选择继承时会跟随第 1 层。',
     pass1: '第 1 层', pass2: '第 2 层', pass3: '第 3 层', style: '风格', backendDefault: '默认', inheritPass1: '继承第 1 层',
     standard: '标准', natural: '自然', cinematic: '电影', activeLayer: '已启用', inactiveLayer: '未启用',
-    runtime: '神经渲染运行库', runtimeBody: '选择或导入这个游戏使用的神经渲染运行库。', installRuntimeTitle: '安装与运行库', install: '安装 / 更新后端', importRuntime: '导入运行库', openGameFolder: '打开游戏目录', restoreTitle: '原始游戏文件', restoreBody: '恢复安装前创建的备份。', restore: '恢复原文件', advanced: '高级信息', overlayTuneTitle: '具体画面调节放在游戏内面板', overlayTuneBody: '强度、模型分辨率、局部结构、局部色调、皮肤结构和遮罩等参数需要看着实际画面实时调整。进入游戏后按 Insert 打开。',
+    runtime: '神经渲染运行库', runtimeBody: '运行库在游戏间共享。只需导入一次 nvngx_dlssnr.dll；安装后端时会自动复制到对应游戏目录。', runtimeShared: '共享缓存', runtimeGameCopy: '游戏内副本', installRuntimeTitle: '安装与运行库', install: '安装 / 更新后端', importRuntime: '导入运行库', openGameFolder: '打开游戏目录', restoreTitle: '原始游戏文件', restoreBody: '恢复安装前创建的备份。', restore: '恢复原文件', advanced: '高级信息', overlayTuneTitle: '具体画面调节放在游戏内面板', overlayTuneBody: '强度、模型分辨率、局部结构、局部色调、皮肤结构和遮罩等参数需要看着实际画面实时调整。进入游戏后按 Insert 打开。',
     inGame: '游戏内：', keepDlssOn: '保持 DLSS 超分开启；质量、平衡、性能等档位仍由游戏设置决定。',
     gamesBody: '本机扫描到的兼容游戏。', settingsBody: '界面在同一时间只显示一种语言。', language: '语言', creditsTitle: '鸣谢',
     creditsBody: '感谢 DLSS5-Swapper 与 OptiScaler 项目。',
@@ -108,7 +108,8 @@ function renderPassStyles(game) {
   for (const [pass, key] of fields) {
     const select = $(key);
     const active = pass <= passes;
-    select.value = String(game.settings?.[key] ?? 'auto');
+    const rawStyle = String(game.settings?.[key] ?? (pass === 1 ? '0' : 'auto'));
+    select.value = pass === 1 && rawStyle === 'auto' ? '0' : rawStyle;
     select.disabled = busy || !active;
     const card = document.querySelector(`[data-pass-card="${pass}"]`);
     card?.classList.toggle('inactive', !active);
@@ -154,14 +155,19 @@ function renderGame() {
   $('installState').textContent = game.installed ? t('installed') : t('ready');
   renderMode(game);
 
-  $('runtimeStatus').textContent = game.runtime
-    ? `${t('runtimeReady')}${game.runtime.version ? ` · ${game.runtime.version}` : ''}`
+  const sharedRuntime = state.runtimeCache || null;
+  const gameRuntime = game.runtime || null;
+  const visibleRuntime = sharedRuntime || gameRuntime;
+  const runtimeSource = sharedRuntime ? t('runtimeShared') : (gameRuntime ? t('runtimeGameCopy') : '');
+  $('runtimeStatus').textContent = visibleRuntime
+    ? `${t('runtimeReady')} · ${runtimeSource}${visibleRuntime.version ? ` · ${visibleRuntime.version}` : ''}`
     : t('missing');
 
   $('installBtn').textContent = game.installed ? t('installed') : t('install');
   $('installBtn').disabled = busy || game.installed || !game.chosen || !game.dlss;
   $('restoreBtn').disabled = busy || !game.hasBackup;
-  $('runtimeBtn').disabled = busy;
+  $('runtimeBtn').classList.toggle('hidden', Boolean(sharedRuntime));
+  $('runtimeBtn').disabled = busy || Boolean(sharedRuntime);
   $('passesSelect').disabled = busy;
   $('presrToggle').disabled = busy;
 

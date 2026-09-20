@@ -94,7 +94,7 @@ test('later pass styles default to backend inheritance', () => {
   const optiscaler = require(path.join(root, 'standalone/core/optiscaler'));
   const ini = require(path.join(root, 'standalone/core/ini'));
   const configured = optiscaler.configure('', { exePath: path.join(root, 'Game.exe') }, { passes: 2 });
-  assert.equal(ini.get(configured, 'DlssNr', 'Style'), 'auto');
+  assert.equal(ini.get(configured, 'DlssNr', 'Style'), '0');
   assert.equal(ini.get(configured, 'DlssNr', 'Pass2Style'), 'auto');
   assert.equal(ini.get(configured, 'DlssNr', 'Pass3Style'), 'auto');
 });

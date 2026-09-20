@@ -33,7 +33,7 @@ const DEFAULT_GAME_SETTINGS = Object.freeze({
   enabled: true,
   runBeforeSR: true,
   passes: 1,
-  pass1Style: 'auto',
+  pass1Style: '0',
   pass2Style: 'auto',
   pass3Style: 'auto'
 });
@@ -50,7 +50,11 @@ let folderSelectionGeneration = 0;
 const stateFile = () => path.join(app.getPath('userData'), 'standalone-library.json');
 const idFor = exePath => crypto.createHash('sha1').update(path.resolve(exePath).toLowerCase()).digest('hex').slice(0, 16);
 const normalizedExePath = exePath => path.resolve(String(exePath)).toLowerCase();
-const settingsFor = value => ({ ...DEFAULT_GAME_SETTINGS, ...(value || {}) });
+const settingsFor = value => {
+  const next = { ...DEFAULT_GAME_SETTINGS, ...(value || {}) };
+  if (next.pass1Style === 'auto') next.pass1Style = '0';
+  return next;
+};
 
 function defaultState() {
   return { language: 'en', selectedGameId: null, games: [], ignoredPaths: [] };
@@ -223,7 +227,7 @@ function cachedViewState() {
       cachedOnly: true
     };
   });
-  return { language: state.language, selectedGameId: state.selectedGameId, games };
+  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: runtime.detectCached(app), games };
 }
 
 async function viewState({ refreshIds = [], refreshAll = false } = {}) {
@@ -254,7 +258,7 @@ async function viewState({ refreshIds = [], refreshAll = false } = {}) {
     state.selectedGameId = games.find(game => !game.hidden)?.id || null;
     saveState();
   }
-  return { language: state.language, selectedGameId: state.selectedGameId, games };
+  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: runtime.detectCached(app), games };
 }
 
 async function discoverAndMerge(refreshAll = false) {

@@ -33,3 +33,10 @@ body{color:var(--text);font-family:"Segoe UI Variable Text","Segoe UI","Helvetic
 .toast{background:#222428!important;border:1px solid #3c4044!important;border-radius:8px!important;box-shadow:0 12px 35px rgba(0,0,0,.35)!important}
 @media(max-width:1180px){.library-game-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.home-v20-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:900px){.app-shell{grid-template-columns:88px 1fr!important}.library-game-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.overlay-settings-grid{grid-template-columns:1fr!important}.runtime-config-row,.passes-setting-row{align-items:stretch;flex-direction:column}.runtime-config-actions{justify-content:flex-start}.language-field{align-items:stretch!important;flex-direction:column!important}.language-field>select{width:100%!important}}
+
+
+/* Keep Chromium select popups aligned with the app accent instead of Windows blue. */
+select{accent-color:var(--accent)}
+select option{background:#131416;color:#f3f5f6}
+select option:checked{background:linear-gradient(#80c704,#80c704);color:#090b05}
+select option:hover{background:linear-gradient(#263607,#263607);color:#d8f2a0}

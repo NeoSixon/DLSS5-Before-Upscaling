@@ -12,7 +12,7 @@ const gameProcess = require('./game-process');
 
 const RELEASE = Object.freeze({
   version: '0.7.7',
-  packageId: '0.7.7-dlss5mgr20',
+  packageId: '0.7.7-dlss5mgr21',
   url: 'https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass/releases/download/v0.7.7/OptiScaler-DLSSNR-v0.7.7.zip',
   sha256: '4a315a3b3ee495631bd7cb1f562f609af577443602e507bfc7a7e6749c296258',
   readme: 'INSTALL-DLSSNR.md',
@@ -85,6 +85,11 @@ function styleValue(settings, key) {
   return value;
 }
 
+function primaryStyleValue(settings, key) {
+  const value = styleValue(settings, key);
+  return value === 'auto' ? '0' : value;
+}
+
 function configure(text, target, settings = {}) {
   const passes = Number(settings.passes || 1);
   if (!Number.isInteger(passes) || passes < 1 || passes > 3) throw fail('invalidPasses', 'Passes must be 1, 2, or 3.');
@@ -96,7 +101,7 @@ function configure(text, target, settings = {}) {
     ['DlssNr', 'FinishedPicture', 'false'],
     ['DlssNr', 'Passes', String(passes)],
     ['DlssNr', 'WorkingScale', '1.0'],
-    ['DlssNr', 'Style', styleValue(settings, 'pass1Style')],
+    ['DlssNr', 'Style', primaryStyleValue(settings, 'pass1Style')],
     ['DlssNr', 'Pass2Style', styleValue(settings, 'pass2Style')],
     ['DlssNr', 'Pass3Style', styleValue(settings, 'pass3Style')],
     ['Menu', 'ShortcutKey', '45'],
