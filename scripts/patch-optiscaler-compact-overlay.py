@@ -579,13 +579,13 @@ static void RenderDlss5ManagerOverlay(TContext& ctx)
                          &config->DlssNrLocalTone, &config->DlssNrSkinStructure,
                          &config->DlssNrAutoMask, false);
             if (passes >= 2)
-                passAdvanced(2, &config->DlssNrPass2Intensity, &config->DlssNrPass2LocalStructure,
-                             &config->DlssNrPass2LocalTone, &config->DlssNrPass2SkinStructure,
-                             &config->DlssNrPass2AutoMask, true);
+                passAdvanced(2, &config->DlssNrPassOverrides[0].intensity, &config->DlssNrPassOverrides[0].structure,
+                             &config->DlssNrPassOverrides[0].tone, &config->DlssNrPassOverrides[0].skin,
+                             &config->DlssNrPassOverrides[0].autoMask, true);
             if (passes >= 3)
-                passAdvanced(3, &config->DlssNrPass3Intensity, &config->DlssNrPass3LocalStructure,
-                             &config->DlssNrPass3LocalTone, &config->DlssNrPass3SkinStructure,
-                             &config->DlssNrPass3AutoMask, true);
+                passAdvanced(3, &config->DlssNrPassOverrides[1].intensity, &config->DlssNrPassOverrides[1].structure,
+                             &config->DlssNrPassOverrides[1].tone, &config->DlssNrPassOverrides[1].skin,
+                             &config->DlssNrPassOverrides[1].autoMask, true);
 
             ImGui::Unindent(8.0f * scale);
         }
@@ -624,32 +624,7 @@ static void RenderDlss5ManagerOverlay(TContext& ctx)
                 changed = true;
             }
 
-            bool everySecond = config->DlssNrResidualFg.value_or_default();
-            ImGui::BeginDisabled(!deferred);
-            if (ImGui::Checkbox("NR every second frame with NVIDIA FG", &everySecond))
-            {
-                config->DlssNrResidualFg = everySecond;
-                changed = true;
-            }
-
-            bool approximateCamera = config->DlssNrResidualFgApproxCamera.value_or_default();
-            ImGui::BeginDisabled(!everySecond);
-            if (ImGui::Checkbox("Allow approximate FG camera guides", &approximateCamera))
-            {
-                config->DlssNrResidualFgApproxCamera = approximateCamera;
-                changed = true;
-            }
             ImGui::EndDisabled();
-            ImGui::EndDisabled();
-            ImGui::EndDisabled();
-
-            int precision = config->DlssNrPrecision.value_or_default() == 4 ? 1 : 0;
-            const char* precisionNames[] = { "NVIDIA FP8", "FP8 + NVFP4 hybrid (RTX 50)" };
-            if (ImGui::Combo("Model precision", &precision, precisionNames, IM_ARRAYSIZE(precisionNames)))
-            {
-                config->DlssNrPrecision = precision == 1 ? 4u : 0u;
-                changed = true;
-            }
 
             int hdrMode = (int) std::clamp(config->DlssNrReversibleMode.value_or_default(), 0u, 4u);
             const char* hdrModes[] = { "Off (soft knee)", "Neutwo + composed", "Neutwo + replace",
