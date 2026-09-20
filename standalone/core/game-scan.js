@@ -167,8 +167,7 @@ function installedInfo(gameDir, chosen) {
   const hook = path.join(exeDir, hookName);
   const required = [
     hook,
-    path.join(exeDir, 'OptiScaler.ini'),
-    path.join(exeDir, 'nvngx.dll_dlssnr.dll')
+    path.join(exeDir, 'OptiScaler.ini')
   ];
   const installed = required.every(file => fs.existsSync(file));
   return {
