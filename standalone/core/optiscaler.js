@@ -12,7 +12,7 @@ const gameProcess = require('./game-process');
 
 const RELEASE = Object.freeze({
   version: '0.7.7',
-  packageId: '0.7.7-dlss5mgr28',
+  packageId: '0.7.7-dlss5mgr29',
   url: 'https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass/releases/download/v0.7.7/OptiScaler-DLSSNR-v0.7.7.zip',
   sha256: '4a315a3b3ee495631bd7cb1f562f609af577443602e507bfc7a7e6749c296258',
   readme: 'INSTALL-DLSSNR.md',
@@ -95,7 +95,7 @@ function concreteStyleValue(settings, key, fallback = '0') {
   return value === 'auto' ? fallback : value;
 }
 
-function configure(text, target, settings = {}) {
+function configure(text, target, settings = {}, route = null) {
   const passes = Number(settings.passes || 1);
   if (!Number.isInteger(passes) || passes < 1 || passes > 3) throw fail('invalidPasses', 'Passes must be 1, 2, or 3.');
   const runBeforeSR = settings.runBeforeSR !== false;
@@ -130,14 +130,25 @@ function configure(text, target, settings = {}) {
     ['Log', 'LogLevel', '2'],
     ['Spoofing', 'Dxgi', 'false'],
     ['Plugins', 'LoadAsiPlugins', 'false'],
-    ['ProcessFilter', 'TargetProcessName', path.basename(target.exePath)]
+    ['ProcessFilter', 'TargetProcessName', path.basename(target.exePath)],
+    ['Inputs', 'EnableDlssInputs', 'true'],
+    ['Inputs', 'EnableXeSSInputs', 'true'],
+    ['Inputs', 'EnableFsr2Inputs', 'true'],
+    ['Inputs', 'UseFsr2Inputs', 'true'],
+    ['Inputs', 'EnableFsr3Inputs', 'true'],
+    ['Inputs', 'UseFsr3Inputs', 'true'],
+    ['Inputs', 'EnableFfxInputs', 'true'],
+    ['Inputs', 'UseFfxInputs', 'true'],
+    ['Inputs', 'EnableHotSwapping', 'false'],
+    ['Inputs', 'Fsr2Pattern', route?.id === 'auto-probe' ? 'true' : 'false'],
+    ['Inputs', 'Fsr3Pattern', route?.id === 'auto-probe' ? 'true' : 'false']
   ];
   for (const [section, key, value] of values) out = ini.set(out, section, key, value);
 
   for (const [field, value] of [
     ['Dx12Upscaler', 'dlss'],
-    ['Dx11Upscaler', 'ffx_12'],
-    ['VulkanUpscaler', 'ffx_12']
+    ['Dx11Upscaler', 'dlss_12'],
+    ['VulkanUpscaler', 'dlss']
   ]) out = ini.set(out, 'Upscalers', field, value);
   return out;
 }
@@ -170,7 +181,7 @@ function checkConflicts(gameDir, exePath, api) {
   if (fs.existsSync(optiDir)) throw fail('installConflict', `Conflicting pre-existing OptiScaler folder: ${optiDir}`);
 }
 
-async function install({ gameDir, exePath, api, apiLabel, packageRoot, runtimePath, settings, replaceExisting = false }, onLog) {
+async function install({ gameDir, exePath, api, apiLabel, packageRoot, runtimePath, settings, route = null, replaceExisting = false }, onLog) {
   const log = (code, params = {}) => onLog && onLog({ code, params });
   validatePackage(packageRoot);
   if (!runtimePath || !fs.existsSync(runtimePath)) throw fail('runtimeRequired', 'Neural Rendering runtime is missing.');
@@ -178,7 +189,7 @@ async function install({ gameDir, exePath, api, apiLabel, packageRoot, runtimePa
   if (!replaceExisting) checkConflicts(gameDir, exePath, api);
 
   const manifest = fileState.beginManifest(gameDir, exePath, api);
-  manifest.optiscaler = { version: RELEASE.packageId, upstreamVersion: RELEASE.version, hook: hookFor(api), migratedExisting: Boolean(replaceExisting) };
+  manifest.optiscaler = { version: RELEASE.packageId, upstreamVersion: RELEASE.version, hook: hookFor(api), inputRoute: route?.id || null, migratedExisting: Boolean(replaceExisting) };
   manifest.game.bitness = 64;
   manifest.game.apiLabel = apiLabel || api;
   await fileState.saveManifest(gameDir, manifest);
@@ -200,7 +211,7 @@ async function install({ gameDir, exePath, api, apiLabel, packageRoot, runtimePa
 
     const configFile = path.join(exeDir, 'OptiScaler.ini');
     const baseText = ini.read(configFile) || ini.read(path.join(packageRoot, 'OptiScaler.ini'));
-    await fileState.writeTracked(manifest, gameDir, configFile, configure(baseText, { exePath }, settings), { kind: 'config' });
+    await fileState.writeTracked(manifest, gameDir, configFile, configure(baseText, { exePath }, settings, route), { kind: 'config' });
     await fileState.saveManifest(gameDir, manifest);
     log(replaceExisting ? 'migrationDone' : 'installDone', { version: RELEASE.packageId });
     return manifest;
@@ -279,7 +290,7 @@ async function upgradeManaged({ gameDir, exePath, packageRoot, runtimePath, sett
     }
 
     const baseText = ini.read(configFile) || ini.read(path.join(packageRoot, 'OptiScaler.ini'));
-    await fileState.writeTracked(manifest, gameDir, configFile, configure(baseText, { exePath }, settings), { kind: 'config' });
+    await fileState.writeTracked(manifest, gameDir, configFile, configure(baseText, { exePath }, settings, manifest.optiscaler?.inputRoute ? { id: manifest.optiscaler.inputRoute } : null), { kind: 'config' });
     manifest.optiscaler = {
       ...manifest.optiscaler,
       version: RELEASE.packageId,
