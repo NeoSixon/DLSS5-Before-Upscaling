@@ -1,6 +1,15 @@
 'use strict';
 
 (() => {
+  const artworkRepairRequests = window.__dlss5ArtworkRepairRequests
+    || (window.__dlss5ArtworkRepairRequests = new Set());
+  function requestArtworkRepair(game) {
+    if (!game?.id || !state.steamGridDbConfigured || !window.nrApp?.repairArtwork) return;
+    if (artworkRepairRequests.has(game.id)) return;
+    artworkRepairRequests.add(game.id);
+    window.nrApp.repairArtwork(game.id).catch(() => {});
+  }
+
   const polish = document.createElement('link');
   polish.rel = 'stylesheet';
   polish.href = 'compact-ui.css';
@@ -162,7 +171,11 @@
       hero.style.setProperty('background-image', `linear-gradient(90deg,rgba(5,7,9,.95) 0%,rgba(5,7,9,.80) 28%,rgba(5,7,9,.38) 58%,rgba(5,7,9,.10) 100%),url("${safe}")`, 'important');
       hero.classList.add('has-banner');
     };
-    const clear = () => { hero.style.removeProperty('background-image'); hero.classList.remove('has-banner'); };
+    const clear = () => {
+      hero.style.removeProperty('background-image');
+      hero.classList.remove('has-banner');
+      requestArtworkRepair(game);
+    };
     if (!primary && !fallback) return clear();
     const image = new Image(); image.onload = () => apply(primary || fallback);
     image.onerror = () => {
@@ -214,7 +227,13 @@
     const art = document.createElement('img'); art.className = 'home-game-art'; art.alt = '';
     const primary = game.tileDataUrl || game.bannerDataUrl || game.coverDataUrl || ''; const fallback = game.bannerDataUrl || game.coverDataUrl || game.iconDataUrl || '';
     if (primary) art.src = primary;
-    art.addEventListener('error', () => { if (fallback && art.src !== fallback) art.src = fallback; else art.classList.add('hidden-art'); });
+    art.addEventListener('error', () => {
+      if (fallback && art.src !== fallback) art.src = fallback;
+      else {
+        art.classList.add('hidden-art');
+        requestArtworkRepair(game);
+      }
+    });
     const shade = document.createElement('span'); shade.className = 'home-game-shade';
     const text = document.createElement('span'); text.className = 'home-game-card-copy';
     const title = document.createElement('b'); title.textContent = gameTitle(game);
