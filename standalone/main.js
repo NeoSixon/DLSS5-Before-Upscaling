@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, shell, Menu, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const SUPPORT_URL = 'https://buymeacoffee.com/NeoSixon';
 const GITHUB_URL = 'https://github.com/NeoSixon/DLSS5-Before-Upscaling';
 const fs = require('fs');
@@ -14,7 +14,6 @@ const srRuntime = require('./core/sr-runtime');
 const optiscaler = require('./core/optiscaler');
 const nrSettings = require('./core/nr-settings');
 const discovery = require('./core/discovery');
-const artwork = require('./core/artwork');
 
 const PROFILE_BY_EXE = Object.freeze({
   'yysls.exe': Object.freeze({
@@ -43,7 +42,6 @@ const DEFAULT_GAME_SETTINGS = Object.freeze({
 let win = null;
 let liveState = null;
 let discoveryPromise = null;
-let artworkEnrichmentPromise = null;
 const iconCache = new Map();
 const artworkCache = new Map();
 const inspectionCache = new Map();
@@ -80,6 +78,20 @@ function loadState() {
     const parsed = JSON.parse(fs.readFileSync(stateFile(), 'utf8'));
     if (parsed && typeof parsed === 'object' && Array.isArray(parsed.games)) {
       liveState = { ...defaultState(), ...parsed };
+      const legacyFolder = ['steam', 'grid', 'db'].join('');
+      const legacyCache = path.join(app.getPath('userData'), 'artwork-cache', legacyFolder);
+      const legacyIdKey = ['steam', 'Grid', 'Db', 'GameId'].join('');
+      for (const record of liveState.games) {
+        delete record[legacyIdKey];
+        for (const key of ['coverPath', 'bannerPath', 'tilePath']) {
+          if (record[key] && path.resolve(String(record[key])).toLowerCase().startsWith(path.resolve(legacyCache).toLowerCase() + path.sep)) {
+            record[key] = null;
+            record.localArtworkScanned = false;
+          }
+        }
+      }
+      try { fs.rmSync(path.join(app.getPath('userData'), ['steam', 'grid', 'db-key.bin'].join('')), { force: true }); } catch {}
+      try { fs.rmSync(legacyCache, { recursive: true, force: true }); } catch {}
       for (const record of liveState.games) {
         const exeStem = path.basename(String(record?.exePath || ''), path.extname(String(record?.exePath || '')));
         if (!record.displayName || String(record.displayName).toLowerCase() === exeStem.toLowerCase()) {
@@ -128,6 +140,7 @@ function normalizeRecord(exePath, meta = {}) {
     coverUrl: meta.coverUrl || null,
     favorite: Boolean(meta.favorite),
     hidden: Boolean(meta.hidden),
+    localArtworkScanned: Boolean(meta.localArtworkScanned),
     settings: settingsFor(meta.settings)
   };
 }
@@ -177,53 +190,18 @@ function coverFor(record) {
   return localArtwork(record.coverPath) || record.coverUrl || profile?.coverUrl || null;
 }
 
-function emitArtworkUpdate(record) {
-  if (!record || !win || win.isDestroyed()) return;
-  win.webContents.send('artwork:updated', {
-    id: record.id,
-    bannerDataUrl: bannerFor(record),
-    tileDataUrl: tileFor(record),
-    coverDataUrl: coverFor(record)
-  });
-}
-
-function queueArtworkEnrichment(records = loadState().games) {
-  if (!artwork.hasApiKey(app, safeStorage) || artworkEnrichmentPromise) return artworkEnrichmentPromise;
-  const pending = records
-    .filter(record => artwork.isNonSteam(record))
-    .filter(record => !record.steamGridDbGameId || !record.coverPath || !record.bannerPath)
-    .map(record => record.id);
-
-  if (!pending.length) return null;
-
-  artworkEnrichmentPromise = (async () => {
-    const concurrency = 3;
-    for (let index = 0; index < pending.length; index += concurrency) {
-      const ids = pending.slice(index, index + concurrency);
-      await Promise.all(ids.map(async id => {
-        const current = recordFor(id);
-        if (!current || !artwork.isNonSteam(current)) return;
-        try {
-          const result = await artwork.fetchForRecord(app, safeStorage, current);
-          if (!result) return;
-          if (result.coverPath) current.coverPath = result.coverPath;
-          if (result.bannerPath) current.bannerPath = result.bannerPath;
-          current.steamGridDbGameId = result.steamGridDbGameId || current.steamGridDbGameId || null;
-          saveState();
-          emitArtworkUpdate(current);
-        } catch (error) {
-          // Artwork is optional. Keep scan/startup independent of network/API failures.
-          if (error?.code === 'steamGridDbUnauthorized') {
-            console.warn('[SteamGridDB] API key rejected');
-          } else {
-            console.warn('[SteamGridDB]', error?.message || error);
-          }
-        }
-      }));
-    }
-  })().finally(() => { artworkEnrichmentPromise = null; });
-
-  return artworkEnrichmentPromise;
+function enrichLocalArtwork(record, force = false) {
+  if (!record || record.launcher === 'Steam') return false;
+  if (record.localArtworkScanned && !force) return false;
+  const found = discovery.localArtworkFor(record.libraryDir || path.dirname(record.exePath));
+  let changed = false;
+  for (const key of ['coverPath', 'bannerPath', 'tilePath']) {
+    if (found[key] && (!record[key] || force)) { record[key] = found[key]; changed = true; }
+  }
+  if (!record.localArtworkScanned) changed = true;
+  record.localArtworkScanned = true;
+  if (changed) saveState();
+  return changed;
 }
 
 function existingNrSetup(exePath, chosen) {
@@ -235,6 +213,7 @@ function existingNrSetup(exePath, chosen) {
 }
 
 async function inspectRecord(record, refresh = false) {
+  enrichLocalArtwork(record, refresh);
   const profile = profileFor(record.exePath);
   if (refresh) inspectionCache.delete(record.id);
   if (!inspectionCache.has(record.id)) {
@@ -310,7 +289,6 @@ function cachedViewState() {
     selectedGameId: state.selectedGameId,
     runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null,
     srRuntimeCache: typeof srRuntime.detectCached === 'function' ? srRuntime.detectCached(app) : null,
-    steamGridDbConfigured: artwork.hasApiKey(app, safeStorage),
     games
   };
 }
@@ -348,7 +326,6 @@ async function viewState({ refreshIds = [], refreshAll = false } = {}) {
     selectedGameId: state.selectedGameId,
     runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null,
     srRuntimeCache: typeof srRuntime.detectCached === 'function' ? srRuntime.detectCached(app) : null,
-    steamGridDbConfigured: artwork.hasApiKey(app, safeStorage),
     games
   };
 }
@@ -372,6 +349,7 @@ async function discoverAndMerge(refreshAll = false) {
       existing.tileUrl = game.tileUrl || existing.tileUrl;
       existing.coverPath = game.coverPath || existing.coverPath;
       existing.coverUrl = game.coverUrl || existing.coverUrl;
+      if (typeof game.localArtworkScanned === 'boolean') existing.localArtworkScanned = game.localArtworkScanned;
       continue;
     }
     state.games.push(candidate);
@@ -379,7 +357,6 @@ async function discoverAndMerge(refreshAll = false) {
   }
   if (!state.selectedGameId) state.selectedGameId = state.games.find(game => !game.hidden)?.id || null;
   saveState();
-  queueArtworkEnrichment(state.games);
   return { added, state: await viewState({ refreshAll }) };
 }
 
@@ -468,44 +445,14 @@ ipcMain.handle('app:set-language', (_event, language) => safeResult(async () => 
   saveState();
   return viewState();
 }));
-ipcMain.handle('artwork:set-steamgriddb-key', (_event, key) => safeResult(async () => {
-  const status = artwork.saveApiKey(app, safeStorage, key);
-  if (status.configured) queueArtworkEnrichment(loadState().games);
-  return {
-    ...status,
-    state: cachedViewState()
-  };
-}));
-ipcMain.handle('artwork:open-steamgriddb-key', () => safeResult(async () => {
-  await shell.openExternal('https://www.steamgriddb.com/profile/preferences/api');
-  return true;
-}));
-ipcMain.handle('artwork:refresh-non-steam', () => safeResult(async () => {
-  queueArtworkEnrichment(loadState().games);
-  return { queued: Boolean(artworkEnrichmentPromise) };
-}));
-ipcMain.handle('artwork:repair-game', (_event, id) => safeResult(async () => {
-  const record = recordFor(id);
-  if (!record) throw new Error('Unknown game');
-  if (!artwork.hasApiKey(app, safeStorage)) return { updated: false, configured: false };
-
-  const result = await artwork.fetchForRecord(app, safeStorage, record, { allowSteamFallback: true });
-  if (!result) return { updated: false, configured: true };
-
-  if (result.coverPath) record.coverPath = result.coverPath;
-  if (result.bannerPath) record.bannerPath = result.bannerPath;
-  record.steamGridDbGameId = result.steamGridDbGameId || record.steamGridDbGameId || null;
-  saveState();
-  emitArtworkUpdate(record);
-  return { updated: true, configured: true, cached: Boolean(result.cached) };
-}));
 ipcMain.handle('games:rescan', () => safeResult(async () => {
   discoveryPromise = discoverAndMerge(true);
   return discoveryPromise;
 }));
 function addExecutable(exePath, meta = {}) {
   if (!/\.exe$/i.test(exePath) || !fs.statSync(exePath).isFile()) throw new Error('Choose a valid game executable.');
-  const record = normalizeRecord(exePath, meta);
+  const local = discovery.localArtworkFor(meta.libraryDir || path.dirname(exePath));
+  const record = normalizeRecord(exePath, { ...local, ...meta, localArtworkScanned: true });
   const state = loadState();
   const normalizedPath = normalizedExePath(record.exePath);
   state.ignoredPaths = state.ignoredPaths.filter(item => item !== normalizedPath);

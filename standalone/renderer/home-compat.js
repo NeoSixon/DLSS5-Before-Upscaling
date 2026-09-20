@@ -42,15 +42,6 @@
   let openingGame = false;
   let menuPending = false;
 
-  const artworkRepairRequests = window.__dlss5ArtworkRepairRequests
-    || (window.__dlss5ArtworkRepairRequests = new Set());
-  function requestArtworkRepair(game) {
-    if (!game?.id || !state.steamGridDbConfigured || !window.nrApp?.repairArtwork) return;
-    if (artworkRepairRequests.has(game.id)) return;
-    artworkRepairRequests.add(game.id);
-    window.nrApp.repairArtwork(game.id).catch(() => {});
-  }
-
   const copy = () => state.language === 'zh-CN' ? {
     scan: '↻ 扫描库',
     scanning: '正在扫描…',
@@ -194,7 +185,6 @@
       if (fallback && art.src !== fallback) art.src = fallback;
       else {
         art.classList.add('hidden-art');
-        requestArtworkRepair(game);
       }
     });
 

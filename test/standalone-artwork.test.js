@@ -8,71 +8,56 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
-const artwork = require(path.join(root, 'standalone/core/artwork'));
+const discovery = require(path.join(root, 'standalone/core/discovery'));
 
-test('SteamGridDB matching prefers the exact verified game title', () => {
-  const games = [
-    { id: 1, name: 'Death Stranding', verified: true },
-    { id: 2, name: "Death Stranding Director's Cut", verified: true },
-    { id: 3, name: "Death Stranding Director's Cut Demo", verified: false }
-  ];
-  assert.equal(artwork.chooseGame(games, "Death Stranding Director's Cut").id, 2);
-});
+function fakePng(file, width, height) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const data = Buffer.alloc(24);
+  Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]).copy(data);
+  data.write('IHDR', 12, 'ascii');
+  data.writeUInt32BE(width, 16);
+  data.writeUInt32BE(height, 20);
+  fs.writeFileSync(file, data);
+}
 
-test('SteamGridDB artwork prefers official-looking static alternatives and rejects risky tags', () => {
-  const images = [
-    { id: 1, score: 40, style: 'blurred', url: 'https://example.invalid/blurred.jpg', tags: [] },
-    { id: 2, score: 15, style: 'alternate', url: 'https://example.invalid/alternate.jpg', tags: [] },
-    { id: 3, score: 999, style: 'alternate', url: 'https://example.invalid/humor.jpg', tags: ['Humor'] }
-  ];
-  assert.equal(artwork.chooseImage(images, 'cover').id, 2);
-});
-
-test('SteamGridDB is reserved for non-Steam library entries', () => {
-  assert.equal(artwork.isNonSteam({ launcher: 'Steam' }), false);
-  assert.equal(artwork.isNonSteam({ launcher: 'Epic Games' }), true);
-  assert.equal(artwork.isNonSteam({ launcher: 'GOG' }), true);
-  assert.equal(artwork.isNonSteam({ launcher: 'Manual' }), true);
-});
-
-test('SteamGridDB API key can be stored through Electron safeStorage abstraction', t => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dlss5-sgdb-'));
+test('local artwork discovery selects a portrait cover, wide hero and landscape tile', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dlss5-local-art-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
-  const app = { getPath: () => dir };
-  const safeStorage = {
-    isEncryptionAvailable: () => true,
-    encryptString: value => Buffer.from(`encrypted:${value}`, 'utf8'),
-    decryptString: value => value.toString('utf8').replace(/^encrypted:/, '')
-  };
-
-  const result = artwork.saveApiKey(app, safeStorage, 'secret-key');
-  assert.equal(result.configured, true);
-  assert.equal(result.protected, true);
-  assert.equal(artwork.readApiKey(app, safeStorage), 'secret-key');
-  assert.equal(artwork.hasApiKey(app, safeStorage), true);
-
-  artwork.saveApiKey(app, safeStorage, '');
-  assert.equal(artwork.hasApiKey(app, safeStorage), false);
+  const cover = path.join(dir, 'launcher', 'images', 'game_cover.png');
+  const hero = path.join(dir, 'launcher', 'images', 'main_hero.png');
+  const tile = path.join(dir, 'launcher', 'images', 'library_header.png');
+  fakePng(cover, 600, 900);
+  fakePng(hero, 1920, 620);
+  fakePng(tile, 920, 430);
+  const result = discovery.localArtworkFor(dir);
+  assert.equal(result.coverPath, cover);
+  assert.equal(result.bannerPath, hero);
+  assert.equal(result.tilePath, tile);
 });
 
-test('Library cards use portrait cover art before horizontal Steam artwork', () => {
+test('local artwork discovery rejects texture-like images', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dlss5-local-texture-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fakePng(path.join(dir, 'character_diffuse.png'), 600, 900);
+  fakePng(path.join(dir, 'ui_normal.png'), 1920, 620);
+  const result = discovery.localArtworkFor(dir);
+  assert.equal(result.coverPath, null);
+  assert.equal(result.bannerPath, null);
+});
+
+test('library cards use the executable icon as the final fallback', () => {
   const compat = read('standalone/renderer/home-compat.js');
-  const css = read('standalone/renderer/nvidia-ui.css');
-  assert.match(compat, /game\.coverDataUrl \|\| game\.tileDataUrl \|\| game\.bannerDataUrl/);
-  assert.match(css, /\.library-game-card\{aspect-ratio:2\/3!important/);
-  assert.match(css, /grid-template-columns:repeat\(auto-fill,minmax\(148px,1fr\)\)/);
+  const fixes = read('standalone/renderer/ux-fixes.js');
+  assert.match(compat, /game\.coverDataUrl \|\| game\.tileDataUrl \|\| game\.bannerDataUrl \|\| game\.iconDataUrl/);
+  assert.match(fixes, /game\.tileDataUrl \|\| game\.bannerDataUrl \|\| game\.coverDataUrl \|\| game\.iconDataUrl/);
 });
 
-test('Settings exposes SteamGridDB API-key configuration without embedding a key', () => {
-  const html = read('standalone/renderer/index.html');
-  const preload = read('standalone/preload.js');
+test('artwork handling has no credential or remote-artwork IPC surface', () => {
   const main = read('standalone/main.js');
-  assert.match(html, /id="steamGridDbKey"/);
-  assert.match(html, /id="steamGridDbSaveBtn"/);
-  assert.match(html, /id="steamGridDbGetKeyBtn"/);
-  assert.match(preload, /artwork:set-steamgriddb-key/);
-  assert.match(preload, /artwork:updated/);
-  assert.match(main, /safeStorage/);
-  assert.match(main, /queueArtworkEnrichment/);
-  assert.doesNotMatch(main, /Bearer\s+[A-Za-z0-9_-]{16,}/);
+  const preload = read('standalone/preload.js');
+  const html = read('standalone/renderer/index.html');
+  assert.doesNotMatch(main, /safeStorage|Authorization:/);
+  assert.doesNotMatch(preload, /artwork:set|artwork:updated/);
+  assert.doesNotMatch(html, /API key/i);
+  assert.match(main, /discovery\.localArtworkFor/);
 });

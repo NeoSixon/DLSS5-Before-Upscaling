@@ -11,14 +11,6 @@ contextBridge.exposeInMainWorld('nrApp', Object.freeze({
   setOverlayPreferences: preferences => ipcRenderer.invoke('app:set-overlay-preferences', preferences),
   openSupport: () => ipcRenderer.invoke('app:open-support'),
   openGithub: () => ipcRenderer.invoke('app:open-github'),
-  setSteamGridDbKey: key => ipcRenderer.invoke('artwork:set-steamgriddb-key', key),
-  openSteamGridDbKey: () => ipcRenderer.invoke('artwork:open-steamgriddb-key'),
-  refreshNonSteamArtwork: () => ipcRenderer.invoke('artwork:refresh-non-steam'),
-  repairArtwork: id => ipcRenderer.invoke('artwork:repair-game', id),
-  onArtworkUpdated: callback => {
-    if (typeof callback !== 'function') return;
-    ipcRenderer.on('artwork:updated', (_event, payload) => callback(payload));
-  },
   rescanGames: () => ipcRenderer.invoke('games:rescan'),
   addGame: () => ipcRenderer.invoke('games:add'),
   chooseGameFolder: () => ipcRenderer.invoke('games:choose-folder'),
