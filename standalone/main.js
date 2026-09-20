@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu, safeStorage } = require('electron');
 const SUPPORT_URL = 'https://buymeacoffee.com/NeoSixon';
 const GITHUB_URL = 'https://github.com/NeoSixon/DLSS5-Before-Upscaling';
 const fs = require('fs');
@@ -14,6 +14,7 @@ const srRuntime = require('./core/sr-runtime');
 const optiscaler = require('./core/optiscaler');
 const nrSettings = require('./core/nr-settings');
 const discovery = require('./core/discovery');
+const artwork = require('./core/artwork');
 
 const PROFILE_BY_EXE = Object.freeze({
   'yysls.exe': Object.freeze({
@@ -42,6 +43,7 @@ const DEFAULT_GAME_SETTINGS = Object.freeze({
 let win = null;
 let liveState = null;
 let discoveryPromise = null;
+let artworkEnrichmentPromise = null;
 const iconCache = new Map();
 const artworkCache = new Map();
 const inspectionCache = new Map();
@@ -161,6 +163,55 @@ function coverFor(record) {
   return localArtwork(record.coverPath) || record.coverUrl || profile?.coverUrl || null;
 }
 
+function emitArtworkUpdate(record) {
+  if (!record || !win || win.isDestroyed()) return;
+  win.webContents.send('artwork:updated', {
+    id: record.id,
+    bannerDataUrl: bannerFor(record),
+    tileDataUrl: tileFor(record),
+    coverDataUrl: coverFor(record)
+  });
+}
+
+function queueArtworkEnrichment(records = loadState().games) {
+  if (!artwork.hasApiKey(app, safeStorage) || artworkEnrichmentPromise) return artworkEnrichmentPromise;
+  const pending = records
+    .filter(record => artwork.isNonSteam(record))
+    .filter(record => !record.coverPath || !record.bannerPath)
+    .map(record => record.id);
+
+  if (!pending.length) return null;
+
+  artworkEnrichmentPromise = (async () => {
+    const concurrency = 3;
+    for (let index = 0; index < pending.length; index += concurrency) {
+      const ids = pending.slice(index, index + concurrency);
+      await Promise.all(ids.map(async id => {
+        const current = recordFor(id);
+        if (!current || !artwork.isNonSteam(current)) return;
+        try {
+          const result = await artwork.fetchForRecord(app, safeStorage, current);
+          if (!result) return;
+          if (result.coverPath) current.coverPath = result.coverPath;
+          if (result.bannerPath) current.bannerPath = result.bannerPath;
+          current.steamGridDbGameId = result.steamGridDbGameId || current.steamGridDbGameId || null;
+          saveState();
+          emitArtworkUpdate(current);
+        } catch (error) {
+          // Artwork is optional. Keep scan/startup independent of network/API failures.
+          if (error?.code === 'steamGridDbUnauthorized') {
+            console.warn('[SteamGridDB] API key rejected');
+          } else {
+            console.warn('[SteamGridDB]', error?.message || error);
+          }
+        }
+      }));
+    }
+  })().finally(() => { artworkEnrichmentPromise = null; });
+
+  return artworkEnrichmentPromise;
+}
+
 function existingNrSetup(exePath, chosen) {
   if (!chosen) return false;
   const exeDir = path.dirname(exePath);
@@ -245,6 +296,7 @@ function cachedViewState() {
     selectedGameId: state.selectedGameId,
     runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null,
     srRuntimeCache: typeof srRuntime.detectCached === 'function' ? srRuntime.detectCached(app) : null,
+    steamGridDbConfigured: artwork.hasApiKey(app, safeStorage),
     games
   };
 }
@@ -282,6 +334,7 @@ async function viewState({ refreshIds = [], refreshAll = false } = {}) {
     selectedGameId: state.selectedGameId,
     runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null,
     srRuntimeCache: typeof srRuntime.detectCached === 'function' ? srRuntime.detectCached(app) : null,
+    steamGridDbConfigured: artwork.hasApiKey(app, safeStorage),
     games
   };
 }
@@ -312,6 +365,7 @@ async function discoverAndMerge(refreshAll = false) {
   }
   if (!state.selectedGameId) state.selectedGameId = state.games.find(game => !game.hidden)?.id || null;
   saveState();
+  queueArtworkEnrichment(state.games);
   return { added, state: await viewState({ refreshAll }) };
 }
 
@@ -399,6 +453,22 @@ ipcMain.handle('app:set-language', (_event, language) => safeResult(async () => 
   loadState().language = language;
   saveState();
   return viewState();
+}));
+ipcMain.handle('artwork:set-steamgriddb-key', (_event, key) => safeResult(async () => {
+  const status = artwork.saveApiKey(app, safeStorage, key);
+  if (status.configured) queueArtworkEnrichment(loadState().games);
+  return {
+    ...status,
+    state: cachedViewState()
+  };
+}));
+ipcMain.handle('artwork:open-steamgriddb-key', () => safeResult(async () => {
+  await shell.openExternal('https://www.steamgriddb.com/profile/preferences/api');
+  return true;
+}));
+ipcMain.handle('artwork:refresh-non-steam', () => safeResult(async () => {
+  queueArtworkEnrichment(loadState().games);
+  return { queued: Boolean(artworkEnrichmentPromise) };
 }));
 ipcMain.handle('games:rescan', () => safeResult(async () => {
   discoveryPromise = discoverAndMerge(true);
