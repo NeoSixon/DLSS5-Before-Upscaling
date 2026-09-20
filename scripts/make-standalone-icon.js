@@ -12,6 +12,7 @@ const OUT_DIR = path.join(ROOT, 'build');
 const SOURCE_ICON = path.join(ROOT, 'standalone', 'renderer', 'icon-source.svg');
 const WINDOW_ICON = path.join(ROOT, 'standalone', 'renderer', 'app-icon.png');
 const ICO_SIZES = [16, 24, 32, 48, 64, 128, 256];
+const RENDER_SIZE = 512;
 
 function buildIco(images) {
   const header = Buffer.alloc(6);
@@ -39,8 +40,8 @@ function buildIco(images) {
 app.whenReady().then(async () => {
   const sourceSvg = fs.readFileSync(SOURCE_ICON, 'utf8');
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-    html,body{margin:0;width:1024px;height:1024px;overflow:hidden;background:transparent}
-    svg{display:block;width:1024px;height:1024px}
+    html,body{margin:0;width:${RENDER_SIZE}px;height:${RENDER_SIZE}px;overflow:hidden;background:transparent}
+    svg{display:block;width:${RENDER_SIZE}px;height:${RENDER_SIZE}px}
   </style></head><body>${sourceSvg}</body></html>`;
 
   const win = new BrowserWindow({
@@ -48,15 +49,17 @@ app.whenReady().then(async () => {
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
-    width: 1024,
-    height: 1024,
+    width: RENDER_SIZE,
+    height: RENDER_SIZE,
+    useContentSize: true,
     resizable: false,
     webPreferences: { offscreen: true }
   });
 
   await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+  win.setContentSize(RENDER_SIZE, RENDER_SIZE);
   await new Promise(resolve => setTimeout(resolve, 80));
-  const source = await win.webContents.capturePage({ x: 0, y: 0, width: 1024, height: 1024 });
+  const source = await win.webContents.capturePage({ x: 0, y: 0, width: RENDER_SIZE, height: RENDER_SIZE });
   win.destroy();
 
   fs.mkdirSync(OUT_DIR, { recursive: true });

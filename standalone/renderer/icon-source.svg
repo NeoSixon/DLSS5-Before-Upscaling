@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <!-- Transparent canvas; only the rounded tile is opaque. -->
-  <rect x="60" y="60" width="904" height="904" rx="202" fill="#0B0D0E"/>
+  <rect x="96" y="96" width="832" height="832" rx="184" fill="#0B0D0E"/>
 
   <!-- Primary 5 mark. Kept deliberately higher/smaller so the complete
        5 / MANAGER lockup remains legible in Windows Explorer icon sizes. -->
@@ -11,15 +11,15 @@
            C670 485 634 460 570 460H292L365 180Z"
         fill="#80C704"/>
 
-  <text x="512" y="820"
+  <text x="512" y="808"
         text-anchor="middle"
         fill="#F4F6F7"
         font-family="Segoe UI, Arial, sans-serif"
-        font-size="104"
+        font-size="96"
         font-weight="800"
         letter-spacing="8"
-        textLength="500"
+        textLength="460"
         lengthAdjust="spacingAndGlyphs">MANAGER</text>
 
-  <path d="M284 862H740L712 890H284Z" fill="#80C704"/>
+  <path d="M300 848H724L700 876H300Z" fill="#80C704"/>
 </svg>
