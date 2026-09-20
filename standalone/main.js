@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const gameScan = require('./core/game-scan');
 const fileState = require('./core/file-state');
 const runtime = require('./core/runtime');
+const srRuntime = require('./core/sr-runtime');
 const optiscaler = require('./core/optiscaler');
 const nrSettings = require('./core/nr-settings');
 const discovery = require('./core/discovery');
@@ -239,7 +240,13 @@ function cachedViewState() {
       cachedOnly: true
     };
   });
-  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null, games };
+  return {
+    language: state.language,
+    selectedGameId: state.selectedGameId,
+    runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null,
+    srRuntimeCache: typeof srRuntime.detectCached === 'function' ? srRuntime.detectCached(app) : null,
+    games
+  };
 }
 
 async function viewState({ refreshIds = [], refreshAll = false } = {}) {
@@ -270,7 +277,13 @@ async function viewState({ refreshIds = [], refreshAll = false } = {}) {
     state.selectedGameId = games.find(game => !game.hidden)?.id || null;
     saveState();
   }
-  return { language: state.language, selectedGameId: state.selectedGameId, runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null, games };
+  return {
+    language: state.language,
+    selectedGameId: state.selectedGameId,
+    runtimeCache: typeof runtime.detectCached === 'function' ? runtime.detectCached(app) : null,
+    srRuntimeCache: typeof srRuntime.detectCached === 'function' ? srRuntime.detectCached(app) : null,
+    games
+  };
 }
 
 async function discoverAndMerge(refreshAll = false) {
@@ -558,7 +571,12 @@ ipcMain.handle('game:install', (_event, id) => safeResult(async () => {
     if (!replaceExisting) return { cancelled: true, state: await viewState() };
   }
 
-  const runtimePath = await runtime.resolve(app, dialog, record.exePath, loadState().language);
+  const currentState = loadState();
+  const runtimePath = await runtime.resolve(app, dialog, record.exePath, currentState.language);
+  const needsManagedSr = ['temporal-presr', 'auto-probe'].includes(inspected.route?.id);
+  const srRuntimePath = needsManagedSr
+    ? await srRuntime.resolve(app, dialog, currentState.games, record.exePath, currentState.language)
+    : null;
   const packageRoot = await optiscaler.ensurePackage(app.getPath('userData'));
   const logs = [];
   await optiscaler.install({
@@ -568,6 +586,7 @@ ipcMain.handle('game:install', (_event, id) => safeResult(async () => {
     apiLabel: inspected.chosen.apiLabel,
     packageRoot,
     runtimePath,
+    srRuntimePath,
     settings: settingsFor(record.settings),
     route: inspected.route,
     replaceExisting
