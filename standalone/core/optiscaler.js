@@ -11,13 +11,11 @@ const fileState = require('./file-state');
 const gameProcess = require('./game-process');
 
 const RELEASE = Object.freeze({
-  version: '0.7.7',
-  packageId: '0.7.7-dlss5mgr29',
-  url: 'https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass/releases/download/v0.7.7/OptiScaler-DLSSNR-v0.7.7.zip',
-  sha256: '4a315a3b3ee495631bd7cb1f562f609af577443602e507bfc7a7e6749c296258',
-  readme: 'INSTALL-DLSSNR.md',
-  licenseUrl: 'https://raw.githubusercontent.com/Dagherbou/OptiScaler_DLSSNR/393e070/LICENSE',
-  licenseSha256: '3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
+  version: '0.8.5',
+  packageId: '0.8.5-dlss5mgr30',
+  url: 'https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass/releases/download/v0.8.5/OptiScaler-NR-v0.8.5.zip',
+  sha256: '2566f5396f25ba3f368de5dcfcc3f7233e3b7e4cab587f6289d141aea0b0d723',
+  readme: 'INSTALL-DLSSNR.md'
 });
 
 const LIBRARIES = Object.freeze([
@@ -27,7 +25,7 @@ const LIBRARIES = Object.freeze([
   'D3D12_OptiScaler/D3D12Core.dll'
 ]);
 
-const LICENSES = Object.freeze(['DirectX_LICENSE.txt', 'FidelityFX_v2_LICENSE.md', 'RenoDX_ATTRIBUTION.txt', 'XeSS_LICENSE.txt']);
+const LICENSES = Object.freeze(['DirectX_LICENSE.txt', 'FidelityFX_v1_LICENSE.md', 'FidelityFX_v2_LICENSE.md', 'RenoDX_ATTRIBUTION.txt', 'XeSS_LICENSE.txt']);
 const STYLE_VALUES = new Set(['auto', '0', '1', '2']);
 
 function fail(code, message = code) {
@@ -39,12 +37,12 @@ function hookFor(api) {
 }
 
 function validatePackage(root) {
-  const binaries = ['OptiScaler.dll', 'nvngx.dll_dlssnr.dll', ...LIBRARIES.map(file => `OptiScaler/${file}`)];
+  const binaries = ['OptiScaler.dll', ...LIBRARIES.map(file => `OptiScaler/${file}`)];
   for (const rel of binaries) {
     const file = fileState.safePath(root, rel);
     if (pe.getBitness(file) !== 64) throw fail('invalidOptiScalerPackage', `Invalid or missing OptiScaler binary: ${rel}`);
   }
-  for (const rel of ['OptiScaler.ini', RELEASE.readme, ...LICENSES.map(file => `Licenses/${file}`)]) {
+  for (const rel of ['OptiScaler.ini', RELEASE.readme, 'LICENSE', ...LICENSES.map(file => `Licenses/${file}`)]) {
     if (!fs.existsSync(fileState.safePath(root, rel))) throw fail('invalidOptiScalerPackage', `Missing OptiScaler package file: ${rel}`);
   }
   return true;
@@ -65,16 +63,12 @@ async function ensurePackage(cacheRoot) {
   const bundled = bundledPackageRoot();
   if (bundled) return bundled;
 
-  const base = path.join(path.resolve(cacheRoot), 'components', 'OptiScaler-0.7.7-presr');
+  const base = path.join(path.resolve(cacheRoot), 'components', 'OptiScaler-0.8.5-presr');
   const archive = base + '.zip';
   if (!download.cached(archive, RELEASE.sha256)) await download.fetchVerified(RELEASE.url, RELEASE.sha256, archive);
   await fs.promises.rm(base, { recursive: true, force: true });
   await extractZip(archive, { dir: base });
 
-  const license = path.join(base, 'OptiScaler-GPL-3.0.txt');
-  if (!download.cached(license, RELEASE.licenseSha256)) {
-    await download.fetchVerified(RELEASE.licenseUrl, RELEASE.licenseSha256, license);
-  }
   validatePackage(base);
   return base;
 }
@@ -156,10 +150,9 @@ function configure(text, target, settings = {}, route = null) {
 function copyPlan(root, api) {
   const plan = [
     ['OptiScaler.dll', hookFor(api)],
-    ['nvngx.dll_dlssnr.dll', 'nvngx.dll_dlssnr.dll'],
     ...LIBRARIES.map(file => [`OptiScaler/${file}`, `OptiScaler/${file}`]),
     ...LICENSES.map(file => [`Licenses/${file}`, `OptiScaler/licenses/${file}`]),
-    ['OptiScaler-GPL-3.0.txt', 'OptiScaler/licenses/LICENSE.GPL-3.0.txt'],
+    ['LICENSE', 'OptiScaler/licenses/LICENSE.GPL-3.0.txt'],
     [RELEASE.readme, 'OptiScaler/README-DLSSNR.txt']
   ];
   if (fs.existsSync(path.join(root, 'DLSS5-MANAGER-BACKEND.txt'))) {
@@ -265,10 +258,16 @@ async function upgradeManaged({ gameDir, exePath, packageRoot, runtimePath, sett
   const plan = copyPlan(packageRoot, api);
   const runtimeTarget = path.join(exeDir, 'nvngx_dlssnr.dll');
   const configFile = path.join(exeDir, 'OptiScaler.ini');
+  const obsoleteHelper = path.join(exeDir, 'nvngx.dll_dlssnr.dll');
+  const obsoleteRel = path.relative(gameDir, obsoleteHelper);
+  const obsoleteTracked =
+    manifest.added?.some(rel => String(rel).toLowerCase() === obsoleteRel.toLowerCase()) ||
+    manifest.replaced?.some(row => String(row.rel).toLowerCase() === obsoleteRel.toLowerCase());
   const targets = [...new Set([
     ...plan.map(item => path.join(exeDir, item.to)),
     runtimeTarget,
-    configFile
+    configFile,
+    ...(obsoleteTracked ? [obsoleteHelper] : [])
   ].map(file => path.resolve(file).toLowerCase()))].map(lower => {
     const match = [...plan.map(item => path.join(exeDir, item.to)), runtimeTarget, configFile]
       .find(file => path.resolve(file).toLowerCase() === lower);
@@ -287,6 +286,11 @@ async function upgradeManaged({ gameDir, exePath, packageRoot, runtimePath, sett
     } else {
       const rel = await fileState.copyTracked(manifest, gameDir, runtimePath, runtimeTarget, { kind: 'runtime' });
       log('added', { rel });
+    }
+
+    if (obsoleteTracked && fs.existsSync(obsoleteHelper)) {
+      await fs.promises.rm(obsoleteHelper, { force: true });
+      log('deleted', { rel: obsoleteRel });
     }
 
     const baseText = ini.read(configFile) || ini.read(path.join(packageRoot, 'OptiScaler.ini'));
