@@ -193,6 +193,20 @@
               <span data-i18n="language">Language</span>
               <select id="languageSelect"><option value="en">English</option><option value="zh-CN">简体中文</option></select>
             </label>
+
+            <div class="artwork-settings">
+              <div class="artwork-settings-copy">
+                <strong data-i18n="steamGridDbTitle">SteamGridDB artwork</strong>
+                <p data-i18n="steamGridDbBody">Used only for non-Steam games. Artwork downloads in the background and is cached locally.</p>
+              </div>
+              <div class="artwork-key-row">
+                <input id="steamGridDbKey" type="password" autocomplete="off" spellcheck="false" data-i18n-placeholder="steamGridDbKeyPlaceholder" placeholder="SteamGridDB API key" />
+                <button class="ghost" id="steamGridDbSaveBtn" type="button" data-i18n="save">Save</button>
+                <button class="ghost" id="steamGridDbGetKeyBtn" type="button" data-i18n="getApiKey">Get API key</button>
+              </div>
+              <small class="artwork-key-status" id="steamGridDbStatus"></small>
+            </div>
+
             <div class="about-copy">
               <strong data-i18n="creditsTitle">Credits</strong>
               <p data-i18n="creditsBody">With thanks to the DLSS5-Swapper and OptiScaler projects.</p>
