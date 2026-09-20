@@ -1,27 +1,91 @@
-# DLSS5 Pre-SR Manager
+<p align="center">
+  <img src="standalone/renderer/icon-source.svg" width="150" alt="DLSS5 Pre-SR Manager icon">
+</p>
 
-A focused Windows manager for DLSS 5 Neural Rendering with Pre-SR placement, multipass profiles, and a compact in-game overlay.
+<h1 align="center">DLSS5 Pre-SR Manager</h1>
 
-> Independent community project. Not affiliated with or endorsed by NVIDIA.
+<p align="center">
+  A focused Windows manager for DLSS 5 Neural Rendering, Pre-SR placement and multipass profiles.
+</p>
 
-## Features
+<p align="center">
+  <code>Windows</code>&nbsp;&nbsp;
+  <code>Pre-SR</code>&nbsp;&nbsp;
+  <code>1–3 passes</code>&nbsp;&nbsp;
+  <code>Per-pass styles</code>&nbsp;&nbsp;
+  <code>In-game overlay</code>
+</p>
 
-- Discover installed games and add executables manually.
-- Detect 64-bit games, rendering APIs, and native DLSS.
-- Install and update a pinned OptiScaler DLSS-NR Pre-SR Multipass backend.
-- Enable or disable Neural Rendering per game.
-- Toggle Pre-SR placement.
-- Configure one to three Neural Rendering passes and per-pass style profiles.
-- Open a dedicated compact in-game overlay with `Insert`.
-- Keep tracked backups and restore original game files.
-- English and Simplified Chinese interface.
-- Windows portable build.
+---
 
-## Runtime policy
+## What it does
 
-`nvngx_dlssnr.dll` is **not distributed** with this project. When needed, the app asks the user to select a trusted local copy, validates it locally, and can cache it locally for reuse.
+DLSS5 Pre-SR Manager gives each supported game its own Neural Rendering profile. It discovers installed titles, checks the usable rendering path, installs the managed backend, and keeps the controls that matter for Pre-SR in one place.
 
-## Development
+The desktop app handles setup and per-game configuration. Image-dependent tuning stays in the in-game panel, where changes can be judged against the actual frame.
+
+## The render path
+
+```text
+Game frame
+    │
+    ▼
+DLSS 5 Neural Rendering
+    │
+    ├── Pass 1  ── style
+    ├── Pass 2  ── style / inherit
+    └── Pass 3  ── style / inherit
+    │
+    ▼
+Pre-SR placement
+    │
+    ▼
+DLSS Super Resolution
+    │
+    ▼
+Output
+```
+
+Pre-SR is the core workflow of this project: Neural Rendering is configured to run before DLSS Super Resolution, with up to three managed passes.
+
+## Inside the manager
+
+| Library | Per-game profile |
+| --- | --- |
+| Scan installed libraries, add a game manually, search, filter, favorite, hide or remove a library entry without deleting game files. | Enable DLSS 5 Neural Rendering, switch Pre-SR, choose 1–3 passes and configure the style of each pass. |
+| **In-game panel** | **Recovery** |
+| Press **Insert** to open the compact overlay for image tuning while the game is running. | Managed installs keep tracked backups so the original game files can be restored from the app. |
+
+## Preview builds
+
+The project is currently in the **0.1.x preview** stage.
+
+Every successful push to `main` produces a Windows portable build in GitHub Actions:
+
+**Actions → latest successful CI run → `DLSS5-PreSR-Manager-Windows-preview`**
+
+A normal Releases download will be added when the first public release is ready.
+
+## Current scope
+
+- Windows 10/11 x64
+- 64-bit games with a supported rendering path
+- Native DLSS detection
+- DLSS 5 Neural Rendering enable / disable
+- Pre-SR placement
+- 1–3 Neural Rendering passes
+- Independent style selection for each pass
+- Managed OptiScaler DLSS-NR Pre-SR Multipass backend
+- English and Simplified Chinese UI
+- Portable Windows build
+
+## Runtime handling
+
+`nvngx_dlssnr.dll` is **not redistributed** by this project.
+
+When a runtime is needed, the app asks you to select a trusted local copy, validates it locally, and can cache that copy locally for reuse. The Manager does not present itself as an NVIDIA product and does not imply NVIDIA affiliation or endorsement.
+
+## Build from source
 
 Requires Node.js 22+ on Windows.
 
@@ -32,14 +96,41 @@ npm test
 npm run build:portable
 ```
 
-The Windows portable build is written to `dist-standalone/`.
+The portable executable is written to:
 
-## Third-party software
+```text
+dist-standalone/
+```
 
-Small retained portions are derived from DLSS5-Swapper under the MIT License. The in-game backend is based on the independently licensed OptiScaler DLSS-NR Pre-SR Multipass project. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+## Project layout
 
-## License
+```text
+standalone/
+  core/        game discovery, profiles, install state and runtime handling
+  renderer/    desktop UI, library, settings and branding
 
-DLSS5 Pre-SR Manager is released under the MIT License. See [LICENSE](LICENSE).
+scripts/
+  overlay patching and icon generation
 
-NVIDIA, GeForce, DLSS and related marks are trademarks of NVIDIA Corporation. Their use here is descriptive only and does not imply affiliation or endorsement.
+test/
+  standalone regression and renderer tests
+```
+
+## Credits & licences
+
+DLSS5 Pre-SR Manager is MIT licensed.
+
+Small retained portions of the compatibility and library-discovery code are derived from **DLSS5-Swapper by Rakan Alkhaldi** under the MIT License. The managed Neural Rendering backend is based on the independently licensed **OptiScaler DLSS-NR Pre-SR Multipass** project.
+
+Full notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Support
+
+If the project is useful to you, development can be supported through [Buy Me a Coffee](https://buymeacoffee.com/NeoSixon).
+
+---
+
+<sub>
+NVIDIA, GeForce, DLSS and related marks are trademarks of NVIDIA Corporation.
+Their use here is descriptive only. DLSS5 Pre-SR Manager is an independent community project and is not affiliated with or endorsed by NVIDIA.
+</sub>
