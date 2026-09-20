@@ -171,14 +171,14 @@ test('settings includes a Buy Me a Coffee support card with a bundled QR code', 
   const preload = read('standalone/preload.js');
   const main = read('standalone/main.js');
   assert.match(html, /supportOpenBtn/);
-  assert.match(html, /assets\/buymeacoffee-qr\.png/);
+  assert.match(html, /assets\/support-qr\.png/);
   assert.match(html, /buymeacoffee\.com\/NeoSixon/);
   assert.match(app, /supportTitle: '支持开发'/);
   assert.match(app, /window\.nrApp\.openSupport\(\)/);
   assert.match(preload, /app:open-support/);
   assert.match(main, /https:\/\/buymeacoffee\.com\/NeoSixon/);
   assert.match(main, /shell\.openExternal\(SUPPORT_URL\)/);
-  const qr = path.join(root, 'standalone/renderer/assets/buymeacoffee-qr.png');
+  const qr = path.join(root, 'standalone/renderer/assets/support-qr.png');
   assert.ok(fs.existsSync(qr), 'support QR should be bundled with standalone renderer assets');
   assert.ok(fs.statSync(qr).size > 1000, 'support QR should not be empty');
 });
