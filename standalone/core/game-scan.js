@@ -95,12 +95,26 @@ function distanceFromExe(file, exeDir) {
   return up * 20 + parts.length;
 }
 
-async function findDlss(exeDir) {
+function scanRootFor(exePath, requestedRoot = null) {
+  const exeDir = path.dirname(path.resolve(exePath));
+  if (!requestedRoot) return exeDir;
+  const root = path.resolve(requestedRoot);
+  try {
+    if (!fs.statSync(root).isDirectory()) return exeDir;
+  } catch {
+    return exeDir;
+  }
+  const rel = path.relative(root, exeDir);
+  if (rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))) return root;
+  return exeDir;
+}
+
+async function findDlss(searchRoot, exeDir = searchRoot) {
   const found = [];
-  await walkFiles(exeDir, async (full, name) => {
+  await walkFiles(searchRoot, async (full, name) => {
     if (!/^nvngx_dlss\.dll$/i.test(name)) return;
     found.push({ path: full, version: pe.getFileVersion(full), distance: distanceFromExe(full, exeDir) });
-  }, 6);
+  }, 10);
   found.sort((a, b) => a.distance - b.distance || a.path.length - b.path.length);
   return found[0] || null;
 }
@@ -128,8 +142,9 @@ function temporalKindFromName(name) {
   return null;
 }
 
-async function findTemporalInputs(exePath) {
+async function findTemporalInputs(exePath, searchRoot = null) {
   const exeDir = path.dirname(path.resolve(exePath));
+  const root = scanRootFor(exePath, searchRoot);
   const found = [];
   const seen = new Set();
 
@@ -151,10 +166,10 @@ async function findTemporalInputs(exePath) {
     if (names.some(name => markers.has(name))) add(kind, 'marker');
   }
 
-  await walkFiles(exeDir, async (full, name) => {
+  await walkFiles(root, async (full, name) => {
     const kind = temporalKindFromName(name);
     if (kind) add(kind, 'file', full);
-  }, 5);
+  }, 10);
 
   return found;
 }
@@ -184,15 +199,16 @@ function installedInfo(gameDir, chosen) {
   };
 }
 
-async function inspect(exePath, profile = null) {
+async function inspect(exePath, profile = null, searchRoot = null) {
   const chosen = inspectExecutable(exePath, profile);
   const gameDir = path.dirname(path.resolve(exePath));
+  const root = scanRootFor(exePath, searchRoot);
   if (!chosen) {
     return { gameDir, chosen: null, dlss: null, upscalerInputs: [], route: routePlan.chooseRoute(), hasBackup: fileState.hasBackup(gameDir), installed: false, optiscaler: null };
   }
   const [dlss, upscalerInputs] = await Promise.all([
-    findDlss(path.dirname(chosen.path)),
-    findTemporalInputs(chosen.path)
+    findDlss(root, path.dirname(chosen.path)),
+    findTemporalInputs(chosen.path, root)
   ]);
   const install = installedInfo(gameDir, chosen);
   const detectedRoute = routePlan.chooseRoute({
@@ -214,4 +230,4 @@ async function inspect(exePath, profile = null) {
   return { gameDir, chosen, dlss, upscalerInputs, route, ...install };
 }
 
-module.exports = { inspect, inspectExecutable, findDlss, findTemporalInputs, temporalKindFromName, apiFromImports, apiFromMarkers, walkFiles };
+module.exports = { inspect, inspectExecutable, findDlss, findTemporalInputs, temporalKindFromName, apiFromImports, apiFromMarkers, walkFiles, scanRootFor };
