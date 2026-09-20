@@ -60,12 +60,12 @@ test('desktop language is mirrored into managed in-game overlays with CJK glyph 
   assert.match(compat, /overlayLanguageError/);
 });
 
-test('manager backend revision is mgr25 everywhere user-facing update detection relies on it', () => {
+test('manager backend revision is mgr26 everywhere user-facing update detection relies on it', () => {
   for (const rel of [
     'standalone/core/optiscaler.js',
     'standalone/renderer/home-compat.js'
   ]) {
-    assert.match(read(rel), /0\.7\.7-dlss5mgr25/, `${rel} should use mgr25`);
+    assert.match(read(rel), /0\.7\.7-dlss5mgr26/, `${rel} should use mgr26`);
   }
 });
 
@@ -174,4 +174,15 @@ test('managed backend hooks the loaded DLSS feature snippet evaluate path', () =
   assert.match(patch, /nvngx_dlss\.dll D3D12 EvaluateFeature intercepted managed handle/);
   assert.match(patch, /DetourAttach\(\&\(PVOID&\) Dlss5OriginalSnippetEvaluate/);
   assert.match(patch, /Dlss5EnsureSnippetEvaluateHooks\(\)/);
+});
+
+
+test('managed backend scans every loaded NGX layer for D3D12 evaluate calls', () => {
+  const patch = read('scripts/patch-optiscaler-ngx-layer-evaluate.py');
+  assert.match(patch, /CreateToolhelp32Snapshot/);
+  assert.match(patch, /Module32FirstW/);
+  assert.match(patch, /NVSDK_NGX_D3D12_EvaluateFeature_C/);
+  assert.match(patch, /Dlss5OwnsDx12Handle/);
+  assert.match(patch, /NGX evaluate layer scan complete/);
+  assert.match(patch, /NGX layer \{\} D3D12 EvaluateFeature intercepted managed handle/);
 });
