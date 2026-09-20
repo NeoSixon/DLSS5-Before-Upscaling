@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/library.webp" width="720" alt="DLSS5 Before Upscaling game library">
+  <img src="docs/screenshots/library.png" width="720" alt="DLSS5 Before Upscaling game library">
 </p>
 
 ---
@@ -77,7 +77,7 @@ The core workflow is simple: Neural Rendering is configured to run before the up
 ## Inside the app
 
 <p align="center">
-  <img src="docs/screenshots/profile.webp" width="720" alt="DLSS5 Before Upscaling per-game Neural Rendering profile">
+  <img src="docs/screenshots/profile.png" width="720" alt="DLSS5 Before Upscaling per-game Neural Rendering profile">
 </p>
 
 **Game library** — Scan installed libraries, add titles manually, search, filter, favorite, hide or remove entries without deleting game files.
