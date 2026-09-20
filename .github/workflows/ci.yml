@@ -39,6 +39,7 @@ jobs:
           node --check standalone/core/backend-update.js
           node --check standalone/core/discovery.js
           node --check standalone/core/runtime.js
+          node --check standalone/core/sr-runtime.js
           node --check standalone/core/optiscaler.js
           node --check standalone/core/nr-settings.js
           node --check standalone/core/derived/pe.js
