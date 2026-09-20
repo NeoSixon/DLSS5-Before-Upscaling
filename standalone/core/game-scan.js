@@ -11,7 +11,7 @@ const SKIP_DIRS = new Set([
   'mods', 'downloads', 'overwrite', 'profiles', '_redist', 'prerequisites', 'directx', 'redist',
   'redistributable', 'redistributables', '_commonredist', 'dotnet', 'installer_resources',
   'installer', 'installers', 'support', 'vcredist', '_support', 'directx_redist',
-  'eaanticheat', 'easyanticheat', 'battleye', 'backup', 'backups', '_backup', 'bak', 'old',
+  'eaanticheat', 'easyanticheat', 'battleye', 'backup', 'backups', '_backup', '_dlss5_backup', 'bak', 'old',
   'original', 'originals', 'optiscaler'
 ]);
 
