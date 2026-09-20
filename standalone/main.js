@@ -164,7 +164,7 @@ function existingNrSetup(exePath, chosen) {
   if (!chosen) return false;
   const exeDir = path.dirname(exePath);
   const hook = chosen.api === 'vulkan' ? 'winmm.dll' : 'dxgi.dll';
-  return [path.join(exeDir, hook), path.join(exeDir, 'OptiScaler.ini'), path.join(exeDir, 'nvngx.dll_dlssnr.dll')]
+  return [path.join(exeDir, hook), path.join(exeDir, 'OptiScaler.ini')]
     .every(file => fs.existsSync(file));
 }
 
