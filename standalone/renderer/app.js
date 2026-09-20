@@ -274,6 +274,15 @@ async function scanGames() {
 }
 
 async function refresh() {
+  if (window.nrApp.getCachedState) {
+    try {
+      const cached = unwrap(await window.nrApp.getCachedState());
+      if (cached?.games?.length) {
+        state = cached;
+        render();
+      }
+    } catch {}
+  }
   state = unwrap(await window.nrApp.getState());
   render();
 }
