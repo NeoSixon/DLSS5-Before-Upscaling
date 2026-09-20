@@ -109,14 +109,16 @@ const TEMPORAL_FILE_KIND = Object.freeze([
   [/^libxess(?:_dx11)?\.dll$/i, 'xess'],
   [/^ffx_fsr2.*\.dll$/i, 'fsr2'],
   [/^ffx_fsr3.*\.dll$/i, 'fsr3'],
-  [/^amd_fidelityfx_(?:dx12|loader_dx12|upscaler_dx12)\.dll$/i, 'ffx']
+  // Only the dedicated FidelityFX upscaler module is strong evidence of a
+  // temporal upscaler. The generic FidelityFX DX12/loader DLLs can be shipped
+  // for unrelated effects and must not make a game "Temporal -> DLSS ready".
+  [/^amd_fidelityfx_upscaler_dx12\.dll$/i, 'ffx']
 ]);
 
 const TEMPORAL_MARKERS = Object.freeze({
   xess: ['xessD3D12CreateContext', 'xessGetVersion'],
   fsr2: ['ffxFsr2ContextCreate', 'ffxFsr2ContextDispatch'],
-  fsr3: ['ffxFsr3ContextCreate', 'ffxFsr3ContextDispatch'],
-  ffx: ['ffxCreateContext', 'ffxDispatch']
+  fsr3: ['ffxFsr3ContextCreate', 'ffxFsr3ContextDispatch']
 });
 
 function temporalKindFromName(name) {
