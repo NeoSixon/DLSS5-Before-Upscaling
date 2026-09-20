@@ -14,7 +14,7 @@ const I18N = {
     runtime: 'Neural Runtime', runtimeBody: 'Shared across games. Import nvngx_dlssnr.dll once; managed games receive a local copy during backend installation.', runtimeShared: 'Shared cache', runtimeGameCopy: 'Game copy', installRuntimeTitle: 'Installation & runtime', install: 'Install / update backend', importRuntime: 'Import runtime', openGameFolder: 'Open game folder', restoreTitle: 'Original game files', restoreBody: 'Restore the backup created before installation.', restore: 'Restore original', advanced: 'Advanced details', overlayTuneTitle: 'Tune the image in the in-game panel', overlayTuneBody: 'Image-dependent controls are easier to tune while looking at the actual game. Press Insert in game to open the panel.',
     inGame: 'In game:', keepDlssOn: 'keep the game\'s temporal upscaler enabled. Native DLSS stays native; FSR/XeSS inputs are routed to managed DLSS Super Resolution.',
     gamesBody: 'Compatible games found on this PC.', settingsBody: 'Keep the interface in one language at a time.', language: 'Language', creditsTitle: 'Credits',
-    steamGridDbTitle: 'SteamGridDB artwork', steamGridDbBody: 'Used only for non-Steam games. Add your SteamGridDB API key once; covers and hero art download in the background and are cached locally.', steamGridDbKeyPlaceholder: 'SteamGridDB API key', save: 'Save', getApiKey: 'Get API key', steamGridDbConfigured: 'Configured · non-Steam artwork will update in the background.', steamGridDbNotConfigured: 'Not configured · Steam games still use Steam artwork.', steamGridDbSaved: 'SteamGridDB artwork enabled.',
+    steamGridDbTitle: 'SteamGridDB artwork', steamGridDbBody: 'Used for non-Steam games and as a fallback when Steam artwork is unavailable. Add your SteamGridDB API key once; covers and hero art are cached locally.', steamGridDbKeyPlaceholder: 'SteamGridDB API key', save: 'Save', getApiKey: 'Get API key', steamGridDbConfigured: 'Configured · non-Steam artwork will update in the background.', steamGridDbNotConfigured: 'Not configured · Steam games still use Steam artwork.', steamGridDbSaved: 'SteamGridDB artwork enabled.',
     creditsBody: 'With thanks to the DLSS5-Swapper and OptiScaler projects.',
     supportTitle: 'Support development', supportBody: 'If this tool is useful to you, you can support continued development on Buy Me a Coffee.',
     supportHint: 'Scan the QR code or open the page directly.',
@@ -40,7 +40,7 @@ const I18N = {
     runtime: '神经渲染运行库', runtimeBody: '运行库在游戏间共享。只需导入一次 nvngx_dlssnr.dll；安装后端时会自动复制到对应游戏目录。', runtimeShared: '共享缓存', runtimeGameCopy: '游戏内副本', installRuntimeTitle: '安装与运行库', install: '安装 / 更新后端', importRuntime: '导入运行库', openGameFolder: '打开游戏目录', restoreTitle: '原始游戏文件', restoreBody: '恢复安装前创建的备份。', restore: '恢复原文件', advanced: '高级信息', overlayTuneTitle: '具体画面调节放在游戏内面板', overlayTuneBody: '强度、模型分辨率、局部结构、局部色调、皮肤结构和遮罩等参数需要看着实际画面实时调整。进入游戏后按 Insert 打开。',
     inGame: '游戏内：', keepDlssOn: '保持游戏原有的时域超分开启。原生 DLSS 直接使用；FSR/XeSS 输入会自动改走托管的 DLSS 超分。',
     gamesBody: '本机扫描到的兼容游戏。', settingsBody: '界面在同一时间只显示一种语言。', language: '语言', creditsTitle: '鸣谢',
-    steamGridDbTitle: 'SteamGridDB 游戏图片', steamGridDbBody: '仅用于非 Steam 游戏。填入一次 SteamGridDB API Key 后，封面与横幅会在后台下载并缓存到本机。', steamGridDbKeyPlaceholder: 'SteamGridDB API Key', save: '保存', getApiKey: '获取 API Key', steamGridDbConfigured: '已配置 · 非 Steam 游戏图片会在后台自动补齐。', steamGridDbNotConfigured: '未配置 · Steam 游戏仍会正常使用 Steam 官方图片。', steamGridDbSaved: '已启用 SteamGridDB 游戏图片。',
+    steamGridDbTitle: 'SteamGridDB 游戏图片', steamGridDbBody: '用于非 Steam 游戏，也会在 Steam 图片不可用时作为备用来源。填入一次 SteamGridDB API Key 后，封面与横幅会缓存到本机。', steamGridDbKeyPlaceholder: 'SteamGridDB API Key', save: '保存', getApiKey: '获取 API Key', steamGridDbConfigured: '已配置 · 非 Steam 游戏图片会在后台自动补齐。', steamGridDbNotConfigured: '未配置 · Steam 游戏仍会正常使用 Steam 官方图片。', steamGridDbSaved: '已启用 SteamGridDB 游戏图片。',
     creditsBody: '感谢 DLSS5-Swapper 与 OptiScaler 项目。',
     supportTitle: '支持开发', supportBody: '如果这个工具对你有帮助，可以通过 Buy Me a Coffee 支持后续开发。',
     supportHint: '扫码或直接打开页面。',
@@ -508,6 +508,7 @@ $('steamGridDbSaveBtn')?.addEventListener('click', async () => {
   await act(async () => {
     const result = unwrap(await window.nrApp.setSteamGridDbKey(input?.value || ''));
     state.steamGridDbConfigured = Boolean(result.configured);
+    if (result.configured) window.__dlss5ArtworkRepairRequests?.clear?.();
     if (input) input.value = '';
     toast(result.configured ? t('steamGridDbSaved') : t('steamGridDbNotConfigured'));
   }, false);
