@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const fileState = require('./file-state');
 const runtime = require('./runtime');
+const srRuntime = require('./sr-runtime');
+const gameScan = require('./game-scan');
 const optiscaler = require('./optiscaler');
 const gameProcess = require('./game-process');
 
@@ -83,7 +85,17 @@ function register({ electron, readSettings, readOverlayPrefs, readManagerLanguag
         return { ok: true, value: { cancelled: true, version: manifest.optiscaler.version, logs: [] } };
       }
 
+      const inspected = await gameScan.inspect(record.exePath);
+      const route = inspected.route || null;
+      if (!route?.installable) {
+        throw fail('noUpscalerRoute', 'No usable native or temporal upscaler route was detected for this game.');
+      }
+
       const runtimePath = await runtime.resolve(electron.app, electron.dialog, record.exePath, language);
+      const needsManagedSr = ['temporal-presr', 'auto-probe'].includes(route.id);
+      const srRuntimePath = needsManagedSr
+        ? await srRuntime.resolve(electron.app, electron.dialog, state.games || [], record.exePath, language)
+        : null;
       const packageRoot = await optiscaler.ensurePackage(userData);
       const settings = readSettings(record.exePath, record.settings || {});
       const logs = [];
@@ -92,7 +104,9 @@ function register({ electron, readSettings, readOverlayPrefs, readManagerLanguag
         exePath: record.exePath,
         packageRoot,
         runtimePath,
+        srRuntimePath,
         settings,
+        route,
         language
       }, entry => logs.push(entry));
 
