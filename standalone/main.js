@@ -200,6 +200,32 @@ async function inspectRecord(record, refresh = false) {
   };
 }
 
+function cachedViewState() {
+  const state = loadState();
+  const games = state.games.map(record => {
+    const profile = profileFor(record.exePath);
+    return {
+      ...record,
+      settings: settingsFor(record.settings),
+      onlineRisk: Boolean(profile?.onlineRisk),
+      chosen: null,
+      dlss: null,
+      compatible: null,
+      installed: null,
+      existingSetup: false,
+      hasBackup: false,
+      optiscaler: null,
+      runtime: null,
+      iconDataUrl: null,
+      bannerDataUrl: record.bannerUrl || profile?.bannerUrl || null,
+      tileDataUrl: record.tileUrl || profile?.tileUrl || null,
+      coverDataUrl: record.coverUrl || profile?.coverUrl || null,
+      cachedOnly: true
+    };
+  });
+  return { language: state.language, selectedGameId: state.selectedGameId, games };
+}
+
 async function viewState({ refreshIds = [], refreshAll = false } = {}) {
   const state = loadState();
   const games = [];
@@ -334,6 +360,7 @@ function createWindow() {
   win.once('ready-to-show', () => win.show());
 }
 
+ipcMain.handle('app:get-cached-state', () => safeResult(async () => cachedViewState()));
 ipcMain.handle('app:get-state', () => safeResult(async () => {
   await ensureAutoDiscovery();
   return viewState({ refreshIds: [loadState().selectedGameId] });
