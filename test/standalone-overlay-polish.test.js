@@ -191,7 +191,7 @@ test('managed backend scans every loaded NGX layer for D3D12 evaluate calls', ()
 test('Death Stranding NGX procedure resolution is redirected before per-frame evaluate', () => {
   const patch = read('scripts/patch-optiscaler-ngx-proc-resolution.py');
   assert.match(patch, /hk_K32_GetProcAddress/);
-  assert.match(patch, /hk_KB_GetProcAddress/);
+  assert.match(patch, /KernelBase GetProcAddress redirect/);
   assert.match(patch, /LdrGetProcedureAddress/);
   assert.match(patch, /NVSDK_NGX_D3D12_EvaluateFeature_C/);
   assert.match(patch, /Death Stranding NGX GetProcAddress redirected to OptiScaler/);
