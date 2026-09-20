@@ -193,7 +193,9 @@ function coverFor(record) {
 function enrichLocalArtwork(record, force = false) {
   if (!record || record.launcher === 'Steam') return false;
   if (record.localArtworkScanned && !force) return false;
-  const found = discovery.localArtworkFor(record.libraryDir || path.dirname(record.exePath));
+  const found = typeof discovery.localArtworkFor === 'function'
+    ? discovery.localArtworkFor(record.libraryDir || path.dirname(record.exePath))
+    : { coverPath: null, bannerPath: null, tilePath: null };
   let changed = false;
   for (const key of ['coverPath', 'bannerPath', 'tilePath']) {
     if (found[key] && (!record[key] || force)) { record[key] = found[key]; changed = true; }
