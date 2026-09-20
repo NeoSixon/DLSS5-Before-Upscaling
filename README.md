@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/NeoSixon/DLSS5-Before-Upscaling/main/standalone/renderer/icon-source.png?v=3" width="160" alt="DLSS5 Before Upscaling icon">
+  <img src="https://raw.githubusercontent.com/NeoSixon/DLSS5-Before-Upscaling/main/standalone/renderer/icon-source.png?v=4" width="160" alt="DLSS5 Before Upscaling icon">
 </p>
 
 <h1 align="center">DLSS5 Before Upscaling</h1>
