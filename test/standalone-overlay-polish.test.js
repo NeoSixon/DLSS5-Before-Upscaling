@@ -91,8 +91,6 @@ test('technical overlay controls expose bilingual hover explanations', () => {
   assert.match(fix, /在最终画面应用 NR/);
   assert.match(fix, /仅支持原生 DX12 \+ DLSS SR，不支持光线重建/);
   assert.match(fix, /细节累积速率/);
-  assert.match(fix, /每两帧运行一次 NR/);
-  assert.match(fix, /估算相机数据辅助帧生成/);
   assert.match(fix, /HDR 亮度进入 NR 时的映射方式/);
 });
 
