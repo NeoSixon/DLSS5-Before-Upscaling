@@ -60,6 +60,7 @@
     removedNotice: '已从游戏库移除，游戏文件未改动。',
     compatibleTag: '兼容',
     incompatibleTag: '不兼容',
+    checkingTag: '检查中…',
     configuredTag: '已配置',
     empty: '没有符合当前筛选条件的游戏。',
     search: '搜索游戏…',
@@ -89,6 +90,7 @@
     removedNotice: 'Removed from the library. Game files were not changed.',
     compatibleTag: 'Compatible',
     incompatibleTag: 'Not compatible',
+    checkingTag: 'Checking…',
     configuredTag: 'Configured',
     empty: 'No games match this filter.',
     search: 'Search games…',
@@ -193,8 +195,8 @@
     const meta = document.createElement('small');
     meta.textContent = [
       game.launcher,
-      isCompatible(game) ? c.compatibleTag : c.incompatibleTag,
-      isConfigured(game) ? c.configuredTag : null
+      game.cachedOnly ? c.checkingTag : (isCompatible(game) ? c.compatibleTag : c.incompatibleTag),
+      !game.cachedOnly && isConfigured(game) ? c.configuredTag : null
     ].filter(Boolean).join(' · ');
     text.append(title, meta);
     card.append(art, shade, text);
@@ -205,7 +207,7 @@
       star.title = c.favorites;
       card.appendChild(star);
     }
-    card.classList.toggle('not-compatible', !isCompatible(game));
+    card.classList.toggle('not-compatible', !game.cachedOnly && !isCompatible(game));
 
     const open = async () => {
       if (busy || openingGame) return;
