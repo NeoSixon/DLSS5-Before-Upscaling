@@ -70,9 +70,13 @@ function nestedSteamArtwork(entry, names) {
   const appDir = path.join(root, String(entry.id));
 
   // Modern Steam library assets are commonly under per-asset SHA1 directories,
-  // and localized clients can cache only the localized filename.
-  const modern = recursiveSteamArtwork(appDir, names);
-  if (modern) return modern;
+  // and localized clients can cache only the localized filename. Preserve the
+  // caller's filename priority across the whole tree: for example, a tile must
+  // prefer library_header over a hero found in an earlier hash directory.
+  for (const name of names) {
+    const modern = recursiveSteamArtwork(appDir, [name]);
+    if (modern) return modern;
+  }
 
   // Keep compatibility with Steam's older flat librarycache layout.
   return firstExisting(names.map(name => path.join(root, `${entry.id}_${name}`)));
