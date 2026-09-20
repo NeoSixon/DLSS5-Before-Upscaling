@@ -4,6 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('nrApp', Object.freeze({
   getState: () => ipcRenderer.invoke('app:get-state'),
+  getCachedState: () => ipcRenderer.invoke('app:get-cached-state'),
   setLanguage: language => ipcRenderer.invoke('app:set-language', language),
   setOverlayLanguage: language => ipcRenderer.invoke('app:set-overlay-language', language),
   getOverlayPreferences: () => ipcRenderer.invoke('app:get-overlay-preferences'),
