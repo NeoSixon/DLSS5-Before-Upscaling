@@ -86,7 +86,7 @@ NTDLL_HELPER = r'''
                         reported = true;
                         LOG_INFO("DLSS-NR compatibility: Death Stranding LdrGetProcedureAddress redirected to OptiScaler");
                     }
-                    return STATUS_SUCCESS;
+                    return (NTSTATUS) 0x00000000L;
                 }
             }
         }
