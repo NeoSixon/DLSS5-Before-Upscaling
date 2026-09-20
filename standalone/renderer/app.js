@@ -339,7 +339,7 @@ function renderGame() {
   tech.replaceChildren(
     techItem(t('route'), routeLabel(game)),
     techItem(t('upscalerInputs'), inputLabel(game)),
-    techItem(t('backend'), game.optiscaler?.version || 'OptiScaler DLSS-NR 0.7.7-preSR'),
+    techItem(t('backend'), game.optiscaler?.version || 'OptiScaler NR 0.8.5'),
     techItem(t('runtime'), game.runtime?.path || t('missing')),
     techItem(t('executable'), game.exePath)
   );
