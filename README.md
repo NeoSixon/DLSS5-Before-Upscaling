@@ -56,15 +56,17 @@ The core workflow is simple: Neural Rendering is configured to run before the up
 | **In-game panel** | **Recovery** |
 | Press **Insert** to open the compact overlay for image tuning while the game is running. | Managed installs keep tracked backups so the original game files can be restored from the app. |
 
-## Preview builds
+## Download
 
 The project is currently in the **0.1.x preview** stage.
 
-Every successful push to `main` produces a Windows portable build in GitHub Actions:
+The first public preview is available from GitHub Releases:
+
+**Releases → `DLSS5 Before Upscaling v0.1.0 Preview` → `DLSS5-Before-Upscaling.exe`**
+
+Every successful push to `main` also produces a Windows portable snapshot in GitHub Actions:
 
 **Actions → latest successful CI run → `DLSS5-Before-Upscaling-Windows-preview`**
-
-A normal Releases download will be added when the first public release is ready.
 
 ## Current scope
 
