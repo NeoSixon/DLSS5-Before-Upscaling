@@ -1,0 +1,11 @@
+.pass-profiles{margin-top:12px}
+.pass-style-grid{padding:0 13px 12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pass-card{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);transition:opacity .18s,border-color .18s,background .18s}
+.pass-card:not(.inactive){border-color:rgba(152,239,114,.12);background:rgba(152,239,114,.035)}
+.pass-card.inactive{opacity:.48}
+.pass-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.pass-card-head b{font-size:12px}
+.pass-card-head small{font-size:10px;color:var(--muted2)}
+.compact-field{gap:6px}.compact-field>span{font-size:10px;color:var(--muted)}.compact-field select{height:38px;border-radius:11px;font-size:12px}
+.pass-help{margin:0;padding:0 13px 13px;color:var(--muted);font-size:11px;line-height:1.5}
+@media(max-width:1050px){.pass-style-grid{grid-template-columns:1fr}}
