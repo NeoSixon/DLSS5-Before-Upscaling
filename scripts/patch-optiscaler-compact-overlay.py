@@ -790,11 +790,16 @@ def main() -> int:
     text = replace_once(text, begin_anchor,
                         begin_anchor + "    const bool interactiveVisible = _isVisible || dlss5ManagerOverlayVisible;\n",
                         "begin-frame visibility")
-    text = replace_once(
-        text,
-        "        config->ShowFps.value_or_default() || _isVisible || ImGui::notifications.size() > 0 || scanIndicator ||",
-        "        config->ShowFps.value_or_default() || interactiveVisible || ImGui::notifications.size() > 0 || scanIndicator ||",
-        "begin-frame condition")
+    old_begin_condition = "        config->ShowFps.value_or_default() || _isVisible || ImGui::notifications.size() > 0 || scanIndicator ||"
+    new_begin_condition = "        config->ShowFps.value_or_default() || interactiveVisible || ImGui::notifications.size() > 0 || scanIndicator ||"
+    modern_begin_condition = "        config->ShowFps.value_or_default() || _isVisible || ImGui::notifications.size() > 0 ||\n        (config->DlssNrCompare.value_or_default() != 0 && config->DlssNrCompareTags.value_or_default()))"
+    modern_begin_replacement = "        config->ShowFps.value_or_default() || interactiveVisible || ImGui::notifications.size() > 0 ||\n        (config->DlssNrCompare.value_or_default() != 0 && config->DlssNrCompareTags.value_or_default()))"
+    if old_begin_condition in text:
+        text = replace_once(text, old_begin_condition, new_begin_condition, "begin-frame condition")
+    elif modern_begin_condition in text:
+        text = replace_once(text, modern_begin_condition, modern_begin_replacement, "modern begin-frame condition")
+    else:
+        raise RuntimeError("pinned begin-frame condition block not found")
     text = replace_once(text, "        OptiInput::FeedImGui(_isVisible);",
                         "        OptiInput::FeedImGui(interactiveVisible);", "ImGui input feed")
 
