@@ -8,7 +8,7 @@ const I18N = {
     addFirstGameTitle: 'Add your first game', addFirstGameBody: "Choose the game's main executable. The app will detect DLSS and the rendering API.", addGame: 'Add game',
     gameDetected: 'Game detected', neuralRendering: 'DLSS5 Neural Rendering', nrDescription: '',
     runBeforeSr: 'Pre-SR', runBeforeSrBody: 'Choose whether Neural Rendering runs before or after DLSS Super Resolution.', howItWorks: 'How it works',
-    passes: 'Passes', passesLabel: 'Pass count', passesBody: 'Choose how many Neural Rendering passes are used.', passStyles: 'Per-pass styles', passStylesHelp: 'Later passes can use their own style. Inherit keeps them linked to Pass 1.',
+    passes: 'Passes', passesLabel: 'Pass count', passesBody: 'Choose how many Neural Rendering passes are used.', passStyles: 'Per-pass styles', passStylesHelp: 'Each active pass can use its own style.',
     pass1: 'Pass 1', pass2: 'Pass 2', pass3: 'Pass 3', style: 'Style', backendDefault: 'Default', inheritPass1: 'Inherit Pass 1',
     standard: 'Standard', natural: 'Natural', cinematic: 'Cinematic', activeLayer: 'Active', inactiveLayer: 'Inactive',
     runtime: 'Neural Runtime', runtimeBody: 'Shared across games. Import nvngx_dlssnr.dll once; managed games receive a local copy during backend installation.', runtimeShared: 'Shared cache', runtimeGameCopy: 'Game copy', installRuntimeTitle: 'Installation & runtime', install: 'Install / update backend', importRuntime: 'Import runtime', openGameFolder: 'Open game folder', restoreTitle: 'Original game files', restoreBody: 'Restore the backup created before installation.', restore: 'Restore original', advanced: 'Advanced details', overlayTuneTitle: 'Tune the image in the in-game panel', overlayTuneBody: 'Image-dependent controls are easier to tune while looking at the actual game. Press Insert in game to open the panel.',
@@ -33,7 +33,7 @@ const I18N = {
     addFirstGameTitle: '添加你的第一个游戏', addFirstGameBody: '选择游戏主程序，应用会自动检测 DLSS 和渲染 API。', addGame: '添加游戏',
     gameDetected: '已检测到游戏', neuralRendering: 'DLSS5 神经渲染', nrDescription: '',
     runBeforeSr: 'Pre-SR', runBeforeSrBody: '决定神经渲染在 DLSS 超分之前还是之后运行。', howItWorks: '工作原理',
-    passes: '层数', passesLabel: '叠加层数', passesBody: '选择神经渲染使用 1、2 或 3 层。', passStyles: '每层风格', passStylesHelp: '后续层可以使用不同风格；选择继承时会跟随第 1 层。',
+    passes: '层数', passesLabel: '叠加层数', passesBody: '选择神经渲染使用 1、2 或 3 层。', passStyles: '每层风格', passStylesHelp: '每个启用的层都可以独立选择风格。',
     pass1: '第 1 层', pass2: '第 2 层', pass3: '第 3 层', style: '风格', backendDefault: '默认', inheritPass1: '继承第 1 层',
     standard: '标准', natural: '自然', cinematic: '电影', activeLayer: '已启用', inactiveLayer: '未启用',
     runtime: '神经渲染运行库', runtimeBody: '运行库在游戏间共享。只需导入一次 nvngx_dlssnr.dll；安装后端时会自动复制到对应游戏目录。', runtimeShared: '共享缓存', runtimeGameCopy: '游戏内副本', installRuntimeTitle: '安装与运行库', install: '安装 / 更新后端', importRuntime: '导入运行库', openGameFolder: '打开游戏目录', restoreTitle: '原始游戏文件', restoreBody: '恢复安装前创建的备份。', restore: '恢复原文件', advanced: '高级信息', overlayTuneTitle: '具体画面调节放在游戏内面板', overlayTuneBody: '强度、模型分辨率、局部结构、局部色调、皮肤结构和遮罩等参数需要看着实际画面实时调整。进入游戏后按 Insert 打开。',
@@ -60,6 +60,150 @@ let scanMessage = '';
 
 const $ = id => document.getElementById(id);
 const t = key => (I18N[state.language] || I18N.en)[key] || key;
+
+const styledSelects = new Map();
+let activeStyledSelect = null;
+
+function closeStyledSelect() {
+  if (!activeStyledSelect) return;
+  activeStyledSelect.wrapper.classList.remove('open');
+  activeStyledSelect.menu.classList.remove('open');
+  activeStyledSelect = null;
+}
+
+function positionStyledSelect(entry) {
+  const rect = entry.trigger.getBoundingClientRect();
+  const estimatedHeight = Math.min(entry.select.options.length * 38 + 8, 240);
+  const openAbove = rect.bottom + estimatedHeight + 8 > window.innerHeight && rect.top > estimatedHeight + 8;
+  entry.menu.style.left = `${Math.round(rect.left)}px`;
+  entry.menu.style.width = `${Math.round(rect.width)}px`;
+  entry.menu.style.top = openAbove
+    ? `${Math.max(8, Math.round(rect.top - estimatedHeight - 4))}px`
+    : `${Math.round(rect.bottom + 4)}px`;
+}
+
+function syncStyledSelect(select) {
+  const entry = styledSelects.get(select.id);
+  if (!entry) return;
+  const selected = select.options[select.selectedIndex] || select.options[0] || null;
+  entry.value.textContent = selected?.textContent || '';
+  entry.wrapper.classList.toggle('disabled', Boolean(select.disabled));
+  entry.trigger.setAttribute('aria-disabled', select.disabled ? 'true' : 'false');
+  entry.menu.replaceChildren();
+  for (const option of select.options) {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'app-select-option' + (option.value === select.value ? ' selected' : '');
+    item.textContent = option.textContent;
+    item.setAttribute('role', 'option');
+    item.setAttribute('aria-selected', option.value === select.value ? 'true' : 'false');
+    item.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (select.disabled) return;
+      select.value = option.value;
+      closeStyledSelect();
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      syncStyledSelect(select);
+    });
+    entry.menu.appendChild(item);
+  }
+  if (select.disabled && activeStyledSelect === entry) closeStyledSelect();
+}
+
+function installStyledSelect(select) {
+  if (!select || styledSelects.has(select.id)) return;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'app-select';
+  const trigger = document.createElement('div');
+  trigger.className = 'app-select-trigger';
+  trigger.tabIndex = 0;
+  trigger.setAttribute('role', 'button');
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  const value = document.createElement('span');
+  value.className = 'app-select-value';
+  const arrow = document.createElement('span');
+  arrow.className = 'app-select-arrow';
+  arrow.setAttribute('aria-hidden', 'true');
+  trigger.append(value, arrow);
+
+  const menu = document.createElement('div');
+  menu.className = 'app-select-menu';
+  menu.setAttribute('role', 'listbox');
+  document.body.appendChild(menu);
+
+  select.parentNode.insertBefore(wrapper, select);
+  wrapper.append(trigger, select);
+  select.classList.add('app-select-native');
+
+  const entry = { select, wrapper, trigger, value, menu };
+  styledSelects.set(select.id, entry);
+
+  const toggle = () => {
+    if (select.disabled) return;
+    if (activeStyledSelect === entry) {
+      closeStyledSelect();
+      return;
+    }
+    closeStyledSelect();
+    activeStyledSelect = entry;
+    wrapper.classList.add('open');
+    menu.classList.add('open');
+    syncStyledSelect(select);
+    positionStyledSelect(entry);
+  };
+  trigger.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggle();
+  });
+  trigger.addEventListener('keydown', event => {
+    if (select.disabled) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggle();
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeStyledSelect();
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const options = [...select.options];
+      const current = Math.max(0, select.selectedIndex);
+      const next = event.key === 'ArrowDown'
+        ? Math.min(options.length - 1, current + 1)
+        : Math.max(0, current - 1);
+      if (next !== current) {
+        select.selectedIndex = next;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        syncStyledSelect(select);
+      }
+    }
+  });
+  syncStyledSelect(select);
+}
+
+function installStyledSelects() {
+  ['passesSelect', 'pass1Style', 'pass2Style', 'pass3Style', 'languageSelect']
+    .map($)
+    .filter(Boolean)
+    .forEach(installStyledSelect);
+}
+
+function syncStyledSelects() {
+  for (const entry of styledSelects.values()) syncStyledSelect(entry.select);
+}
+
+document.addEventListener('click', event => {
+  if (!activeStyledSelect) return;
+  if (activeStyledSelect.wrapper.contains(event.target) || activeStyledSelect.menu.contains(event.target)) return;
+  closeStyledSelect();
+});
+window.addEventListener('resize', closeStyledSelect);
+window.addEventListener('scroll', closeStyledSelect, true);
 
 function gameTitle(game) {
   if (game.profileId === 'where-winds-meet') return t('whereWindsMeet');
@@ -108,8 +252,9 @@ function renderPassStyles(game) {
   for (const [pass, key] of fields) {
     const select = $(key);
     const active = pass <= passes;
-    const rawStyle = String(game.settings?.[key] ?? (pass === 1 ? '0' : 'auto'));
-    select.value = pass === 1 && rawStyle === 'auto' ? '0' : rawStyle;
+    const primaryStyle = String(game.settings?.pass1Style ?? '0');
+    const rawStyle = String(game.settings?.[key] ?? primaryStyle);
+    select.value = ['0', '1', '2'].includes(rawStyle) ? rawStyle : primaryStyle;
     select.disabled = busy || !active;
     const card = document.querySelector(`[data-pass-card="${pass}"]`);
     card?.classList.toggle('inactive', !active);
@@ -239,6 +384,7 @@ function render() {
   document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.page === navPage));
   const game = selectedGame();
   $('crumb').textContent = currentPage === 'game' && game ? gameTitle(game) : t(currentPage === 'game' ? 'games' : currentPage);
+  syncStyledSelects();
 }
 
 function showPage(page) {
@@ -292,6 +438,8 @@ async function refresh() {
   state = unwrap(await window.nrApp.getState());
   render();
 }
+
+installStyledSelects();
 
 document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
 $('minBtn').addEventListener('click', () => window.nrApp.minimize());

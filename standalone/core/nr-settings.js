@@ -43,6 +43,11 @@ function primaryStyleValue(raw, fallback = '0') {
   return value === 'auto' ? '0' : value;
 }
 
+function concreteStyleValue(raw, fallback = '0') {
+  const value = styleValue(raw, fallback);
+  return value === 'auto' ? fallback : value;
+}
+
 function managerLanguage(value) {
   const normalized = String(value || 'en');
   return MANAGER_LANGUAGES.has(normalized) ? normalized : 'en';
@@ -99,26 +104,28 @@ function writeOverlayPrefs(userData, value) {
 }
 
 function read(exePath, fallback = {}) {
+  const basePass1Style = primaryStyleValue(fallback.pass1Style);
   const base = {
     enabled: fallback.enabled !== false,
     runBeforeSR: fallback.runBeforeSR !== false,
     passes: Number.isInteger(Number(fallback.passes)) ? Number(fallback.passes) : 1,
-    pass1Style: primaryStyleValue(fallback.pass1Style),
-    pass2Style: styleValue(fallback.pass2Style),
-    pass3Style: styleValue(fallback.pass3Style)
+    pass1Style: basePass1Style,
+    pass2Style: concreteStyleValue(fallback.pass2Style, basePass1Style),
+    pass3Style: concreteStyleValue(fallback.pass3Style, basePass1Style)
   };
   const file = configFile(exePath);
   if (!fs.existsSync(file)) return base;
 
   const text = ini.read(file) || '';
   const parsedPasses = Number(ini.get(text, 'DlssNr', 'Passes'));
+  const pass1Style = primaryStyleValue(ini.get(text, 'DlssNr', 'Style'), base.pass1Style);
   return {
     enabled: boolValue(ini.get(text, 'DlssNr', 'Enabled'), base.enabled),
     runBeforeSR: boolValue(ini.get(text, 'DlssNr', 'RunBeforeSR'), base.runBeforeSR),
     passes: Number.isInteger(parsedPasses) && parsedPasses >= 1 && parsedPasses <= 3 ? parsedPasses : base.passes,
-    pass1Style: primaryStyleValue(ini.get(text, 'DlssNr', 'Style'), base.pass1Style),
-    pass2Style: styleValue(ini.get(text, 'DlssNr', 'Pass2Style'), base.pass2Style),
-    pass3Style: styleValue(ini.get(text, 'DlssNr', 'Pass3Style'), base.pass3Style)
+    pass1Style,
+    pass2Style: concreteStyleValue(ini.get(text, 'DlssNr', 'Pass2Style'), pass1Style),
+    pass3Style: concreteStyleValue(ini.get(text, 'DlssNr', 'Pass3Style'), pass1Style)
   };
 }
 
@@ -177,13 +184,14 @@ function apply(exePath, settings = {}) {
   if (!Number.isInteger(passes) || passes < 1 || passes > 3) throw new Error('Passes must be 1, 2, or 3');
 
   let text = ini.read(file) || '';
+  const pass1Style = primaryStyleValue(settings.pass1Style);
   const values = [
     ['Enabled', settings.enabled === false ? 'false' : 'true'],
     ['RunBeforeSR', settings.runBeforeSR === false ? 'false' : 'true'],
     ['Passes', String(passes)],
-    ['Style', primaryStyleValue(settings.pass1Style)],
-    ['Pass2Style', styleValue(settings.pass2Style)],
-    ['Pass3Style', styleValue(settings.pass3Style)]
+    ['Style', pass1Style],
+    ['Pass2Style', concreteStyleValue(settings.pass2Style, pass1Style)],
+    ['Pass3Style', concreteStyleValue(settings.pass3Style, pass1Style)]
   ];
   for (const [key, value] of values) text = ini.set(text, 'DlssNr', key, value);
   fs.writeFileSync(file, text, 'utf8');

@@ -28,14 +28,14 @@ const PROFILE_BY_EXE = Object.freeze({
   })
 });
 
-const STYLE_VALUES = new Set(['auto', '0', '1', '2']);
+const STYLE_VALUES = new Set(['0', '1', '2']);
 const DEFAULT_GAME_SETTINGS = Object.freeze({
   enabled: true,
   runBeforeSR: true,
   passes: 1,
   pass1Style: '0',
-  pass2Style: 'auto',
-  pass3Style: 'auto'
+  pass2Style: '0',
+  pass3Style: '0'
 });
 
 let win = null;
@@ -52,7 +52,10 @@ const idFor = exePath => crypto.createHash('sha1').update(path.resolve(exePath).
 const normalizedExePath = exePath => path.resolve(String(exePath)).toLowerCase();
 const settingsFor = value => {
   const next = { ...DEFAULT_GAME_SETTINGS, ...(value || {}) };
-  if (next.pass1Style === 'auto') next.pass1Style = '0';
+  const primary = STYLE_VALUES.has(String(next.pass1Style)) ? String(next.pass1Style) : '0';
+  next.pass1Style = primary;
+  next.pass2Style = STYLE_VALUES.has(String(next.pass2Style)) ? String(next.pass2Style) : primary;
+  next.pass3Style = STYLE_VALUES.has(String(next.pass3Style)) ? String(next.pass3Style) : primary;
   return next;
 };
 
@@ -516,7 +519,7 @@ ipcMain.handle('game:set-settings', (_event, id, settings) => safeResult(async (
   for (const key of ['pass1Style', 'pass2Style', 'pass3Style']) {
     if (!Object.prototype.hasOwnProperty.call(settings || {}, key)) continue;
     const value = String(settings[key]).toLowerCase();
-    if (!STYLE_VALUES.has(value)) throw new Error('Style must be Default, Standard, Natural, or Cinematic');
+    if (!STYLE_VALUES.has(value)) throw new Error('Style must be Standard, Natural, or Cinematic');
     next[key] = value;
   }
   record.settings = next;

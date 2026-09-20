@@ -90,20 +90,26 @@ function primaryStyleValue(settings, key) {
   return value === 'auto' ? '0' : value;
 }
 
+function concreteStyleValue(settings, key, fallback = '0') {
+  const value = styleValue(settings, key);
+  return value === 'auto' ? fallback : value;
+}
+
 function configure(text, target, settings = {}) {
   const passes = Number(settings.passes || 1);
   if (!Number.isInteger(passes) || passes < 1 || passes > 3) throw fail('invalidPasses', 'Passes must be 1, 2, or 3.');
   const runBeforeSR = settings.runBeforeSR !== false;
   let out = String(text || '');
+  const pass1Style = primaryStyleValue(settings, 'pass1Style');
   const values = [
     ['DlssNr', 'Enabled', settings.enabled === false ? 'false' : 'true'],
     ['DlssNr', 'RunBeforeSR', runBeforeSR ? 'true' : 'false'],
     ['DlssNr', 'FinishedPicture', 'false'],
     ['DlssNr', 'Passes', String(passes)],
     ['DlssNr', 'WorkingScale', '1.0'],
-    ['DlssNr', 'Style', primaryStyleValue(settings, 'pass1Style')],
-    ['DlssNr', 'Pass2Style', styleValue(settings, 'pass2Style')],
-    ['DlssNr', 'Pass3Style', styleValue(settings, 'pass3Style')],
+    ['DlssNr', 'Style', pass1Style],
+    ['DlssNr', 'Pass2Style', concreteStyleValue(settings, 'pass2Style', pass1Style)],
+    ['DlssNr', 'Pass3Style', concreteStyleValue(settings, 'pass3Style', pass1Style)],
     ['Menu', 'ShortcutKey', '45'],
     ['Menu', 'Scale', '1.00'],
     ['Menu', 'BGColorA', '0.82'],

@@ -90,21 +90,25 @@ test('OptiScaler config writes independent styles for all three model passes', (
   assert.equal(ini.get(configured, 'DlssNr', 'Pass3Style'), '2');
 });
 
-test('later pass styles default to backend inheritance', () => {
+test('all pass styles default to a concrete Standard style', () => {
   const optiscaler = require(path.join(root, 'standalone/core/optiscaler'));
   const ini = require(path.join(root, 'standalone/core/ini'));
   const configured = optiscaler.configure('', { exePath: path.join(root, 'Game.exe') }, { passes: 2 });
   assert.equal(ini.get(configured, 'DlssNr', 'Style'), '0');
-  assert.equal(ini.get(configured, 'DlssNr', 'Pass2Style'), 'auto');
-  assert.equal(ini.get(configured, 'DlssNr', 'Pass3Style'), 'auto');
+  assert.equal(ini.get(configured, 'DlssNr', 'Pass2Style'), '0');
+  assert.equal(ini.get(configured, 'DlssNr', 'Pass3Style'), '0');
 });
 
-test('per-pass style controls are present in the standalone UI', () => {
+test('per-pass style controls expose only Standard, Natural and Cinematic', () => {
   const html = read('standalone/renderer/index.html');
+  const app = read('standalone/renderer/app.js');
+  const css = read('standalone/renderer/nvidia-ui.css');
   assert.match(html, /id="pass1Style"/);
   assert.match(html, /id="pass2Style"/);
   assert.match(html, /id="pass3Style"/);
-  assert.match(html, /data-i18n="inheritPass1"/);
+  assert.doesNotMatch(html, /data-i18n="inheritPass1"/);
+  assert.match(app, /function installStyledSelects\(\)/);
+  assert.match(css, /\.app-select-option\.selected\{background:#80c704/);
 });
 
 test('standalone packaging has its own DLSS 5 product identity and entry point', () => {
