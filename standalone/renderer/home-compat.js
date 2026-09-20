@@ -178,8 +178,8 @@
     const art = document.createElement('img');
     art.className = 'home-game-art';
     art.alt = '';
-    const primary = game.tileDataUrl || game.bannerDataUrl || game.coverDataUrl || game.iconDataUrl || '';
-    const fallback = game.bannerDataUrl || game.iconDataUrl || '';
+    const primary = game.coverDataUrl || game.tileDataUrl || game.bannerDataUrl || game.iconDataUrl || '';
+    const fallback = game.tileDataUrl || game.bannerDataUrl || game.iconDataUrl || '';
     if (primary) art.src = primary;
     art.addEventListener('error', () => {
       if (fallback && art.src !== fallback) art.src = fallback;
