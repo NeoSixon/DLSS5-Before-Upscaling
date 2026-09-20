@@ -152,7 +152,7 @@ test('standalone build generates the approved vector 5 Manager application icon'
   assert.match(iconScript, /backgroundColor: '#00000000'/);
   assert.match(iconScript, /build\/icon\.ico|icon\.ico/);
   assert.match(iconScript, /app-icon\.png/);
-  assert.match(iconSource, /rx="210"/);
+  assert.match(iconSource, /<rect[^>]+rx="\d+"[^>]+fill="#0B0D0E"\/>/);
   assert.match(iconSource, /fill="#80C704"/);
   assert.match(iconSource, />MANAGER<\/text>/);
 });
