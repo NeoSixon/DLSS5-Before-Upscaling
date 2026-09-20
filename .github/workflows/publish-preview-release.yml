@@ -1,0 +1,99 @@
+name: Publish v0.1.0 Preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-preview-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows preview from validated CI run
+        uses: actions/download-artifact@v4
+        with:
+          name: DLSS5-Before-Upscaling-Windows-preview
+          path: release-assets/windows
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: 35508415142
+
+      - name: Download OptiScaler source patch from validated CI run
+        uses: actions/download-artifact@v4
+        with:
+          name: DLSS5-Before-Upscaling-OptiScaler-source-patch
+          path: release-assets/source-patch
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: 35508415142
+
+      - name: Package source patch
+        shell: bash
+        run: |
+          cd release-assets/source-patch
+          zip -r ../DLSS5-Before-Upscaling-OptiScaler-source-patch.zip .
+
+      - name: Write release notes
+        shell: bash
+        run: |
+          cat > release-notes.md <<'EOF'
+          First public preview of **DLSS5 Before Upscaling**.
+
+          Configure DLSS 5 Neural Rendering before the upscaling stage, with per-game profiles, multi-pass controls, and an in-game overlay.
+
+          ### Included
+          - Per-game DLSS 5 Neural Rendering profiles
+          - Before-Upscaling / Pre-SR placement
+          - 1–3 Neural Rendering passes
+          - Independent per-pass style controls
+          - Installed-game discovery and manual game addition
+          - Managed OptiScaler DLSS-NR Pre-SR Multipass backend
+          - In-game configuration overlay
+          - English and Simplified Chinese UI
+          - Portable Windows build
+
+          ### Current scope
+          - Windows 10/11 x64
+          - 64-bit games with a supported rendering path
+          - Native DLSS detection
+
+          ### Runtime note
+          `nvngx_dlssnr.dll` is **not redistributed** by this project. When needed, the app asks you to select a trusted local copy and validates it locally.
+
+          This is an early preview build. Bugs and compatibility issues are expected.
+          EOF
+
+      - name: Update repository description
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}" \
+            -f description='Configure DLSS 5 Neural Rendering before DLSS Super Resolution, with per-game profiles, multi-pass controls, and an in-game overlay.'
+
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          TAG='v0.1.0-preview'
+          if gh release view "$TAG" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to do."
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            "release-assets/windows/DLSS5-Before-Upscaling.exe" \
+            "release-assets/DLSS5-Before-Upscaling-OptiScaler-source-patch.zip" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title 'DLSS5 Before Upscaling v0.1.0 Preview' \
+            --notes-file release-notes.md \
+            --prerelease
