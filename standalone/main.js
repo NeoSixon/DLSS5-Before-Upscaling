@@ -470,6 +470,21 @@ ipcMain.handle('artwork:refresh-non-steam', () => safeResult(async () => {
   queueArtworkEnrichment(loadState().games);
   return { queued: Boolean(artworkEnrichmentPromise) };
 }));
+ipcMain.handle('artwork:repair-game', (_event, id) => safeResult(async () => {
+  const record = recordFor(id);
+  if (!record) throw new Error('Unknown game');
+  if (!artwork.hasApiKey(app, safeStorage)) return { updated: false, configured: false };
+
+  const result = await artwork.fetchForRecord(app, safeStorage, record, { allowSteamFallback: true });
+  if (!result) return { updated: false, configured: true };
+
+  if (result.coverPath) record.coverPath = result.coverPath;
+  if (result.bannerPath) record.bannerPath = result.bannerPath;
+  record.steamGridDbGameId = result.steamGridDbGameId || record.steamGridDbGameId || null;
+  saveState();
+  emitArtworkUpdate(record);
+  return { updated: true, configured: true, cached: Boolean(result.cached) };
+}));
 ipcMain.handle('games:rescan', () => safeResult(async () => {
   discoveryPromise = discoverAndMerge(true);
   return discoveryPromise;
