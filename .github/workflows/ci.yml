@@ -38,6 +38,7 @@ jobs:
           node --check standalone/core/game-process.js
           node --check standalone/core/backend-update.js
           node --check standalone/core/discovery.js
+          node --check standalone/core/artwork.js
           node --check standalone/core/runtime.js
           node --check standalone/core/sr-runtime.js
           node --check standalone/core/optiscaler.js
