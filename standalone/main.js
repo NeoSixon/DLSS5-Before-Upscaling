@@ -177,7 +177,7 @@ function queueArtworkEnrichment(records = loadState().games) {
   if (!artwork.hasApiKey(app, safeStorage) || artworkEnrichmentPromise) return artworkEnrichmentPromise;
   const pending = records
     .filter(record => artwork.isNonSteam(record))
-    .filter(record => !record.coverPath || !record.bannerPath)
+    .filter(record => !(record.coverPath || record.coverUrl) || !(record.bannerPath || record.bannerUrl))
     .map(record => record.id);
 
   if (!pending.length) return null;
@@ -285,9 +285,9 @@ function cachedViewState() {
       optiscaler: null,
       runtime: null,
       iconDataUrl: null,
-      bannerDataUrl: record.bannerUrl || profile?.bannerUrl || null,
-      tileDataUrl: record.tileUrl || profile?.tileUrl || null,
-      coverDataUrl: record.coverUrl || profile?.coverUrl || null,
+      bannerDataUrl: bannerFor(record),
+      tileDataUrl: tileFor(record),
+      coverDataUrl: coverFor(record),
       cachedOnly: true
     };
   });
