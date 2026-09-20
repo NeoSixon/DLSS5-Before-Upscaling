@@ -169,9 +169,17 @@ inline static NVSDK_NGX_Result NVSDK_CONV Hooked_Dlss5_D3D12_ReleaseFeature(NVSD
         raise RuntimeError(f"D3D12 hook pointer resets: expected 2 matches, found {reset_count}")
     text = text.replace(reset_anchor, reset_block)
 
-    unhook_cond_old = r'''    if (Original_D3D11_GetFeatureRequirements != nullptr || Original_D3D12_GetFeatureRequirements != nullptr)
+    unhook_cond_old = r'''inline static void UnhookApis()
+{
+    NvApiHooks::Unhook();
+
+    if (Original_D3D11_GetFeatureRequirements != nullptr || Original_D3D12_GetFeatureRequirements != nullptr)
 '''
-    unhook_cond_new = r'''    if (Original_D3D11_GetFeatureRequirements != nullptr || Original_D3D12_GetFeatureRequirements != nullptr ||
+    unhook_cond_new = r'''inline static void UnhookApis()
+{
+    NvApiHooks::Unhook();
+
+    if (Original_D3D11_GetFeatureRequirements != nullptr || Original_D3D12_GetFeatureRequirements != nullptr ||
         Original_Vulkan_GetFeatureRequirements != nullptr || Original_D3D12_CreateFeature != nullptr ||
         Original_D3D12_EvaluateFeature != nullptr || Original_D3D12_ReleaseFeature != nullptr)
 '''
