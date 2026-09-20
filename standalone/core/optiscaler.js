@@ -261,7 +261,16 @@ async function rollbackManagedTargets(snapshot) {
   }
 }
 
-async function upgradeManaged({ gameDir, exePath, packageRoot, runtimePath, settings, language = 'en' }, onLog) {
+async function upgradeManaged({
+  gameDir,
+  exePath,
+  packageRoot,
+  runtimePath,
+  srRuntimePath = null,
+  settings,
+  route = null,
+  language = 'en'
+}, onLog) {
   const log = (code, params = {}) => onLog && onLog({ code, params });
   validatePackage(packageRoot);
   const manifest = fileState.loadManifest(gameDir);
@@ -274,33 +283,49 @@ async function upgradeManaged({ gameDir, exePath, packageRoot, runtimePath, sett
   if (manifest.optiscaler.version === RELEASE.packageId) return manifest;
   if (!runtimePath || !fs.existsSync(runtimePath)) throw fail('runtimeRequired', 'Neural Rendering runtime is missing.');
 
+  const effectiveRoute = route || (manifest.optiscaler?.inputRoute ? { id: manifest.optiscaler.inputRoute } : null);
+  const needsManagedSr = ['temporal-presr', 'auto-probe'].includes(effectiveRoute?.id);
+  if (needsManagedSr && (!srRuntimePath || !fs.existsSync(srRuntimePath))) {
+    const existingSr = path.join(path.dirname(exePath), 'nvngx_dlss.dll');
+    if (!fs.existsSync(existingSr)) {
+      throw fail('srRuntimeRequired', 'DLSS Super Resolution runtime is missing for this temporal route.');
+    }
+  }
+
   await gameProcess.assertNotRunning(exePath, language);
 
   const exeDir = path.dirname(exePath);
   const plan = copyPlan(packageRoot, api);
   const runtimeTarget = path.join(exeDir, 'nvngx_dlssnr.dll');
+  const srTarget = path.join(exeDir, 'nvngx_dlss.dll');
   const configFile = path.join(exeDir, 'OptiScaler.ini');
   const obsoleteHelper = path.join(exeDir, 'nvngx.dll_dlssnr.dll');
   const obsoleteRel = path.relative(gameDir, obsoleteHelper);
   const obsoleteTracked =
     manifest.added?.some(rel => String(rel).toLowerCase() === obsoleteRel.toLowerCase()) ||
     manifest.replaced?.some(row => String(row.rel).toLowerCase() === obsoleteRel.toLowerCase());
-  const targets = [...new Set([
+  const targetCandidates = [
     ...plan.map(item => path.join(exeDir, item.to)),
     runtimeTarget,
     configFile,
+    ...(needsManagedSr && srRuntimePath && !fs.existsSync(srTarget) ? [srTarget] : []),
     ...(obsoleteTracked ? [obsoleteHelper] : [])
-  ].map(file => path.resolve(file).toLowerCase()))].map(lower => {
-    const match = [...plan.map(item => path.join(exeDir, item.to)), runtimeTarget, configFile]
-      .find(file => path.resolve(file).toLowerCase() === lower);
-    return path.resolve(match);
-  });
+  ];
+  const targetByKey = new Map(targetCandidates.map(file => [path.resolve(file).toLowerCase(), path.resolve(file)]));
+  const targets = [...targetByKey.values()];
   const snapshot = await snapshotManagedTargets(gameDir, targets);
 
   try {
     for (const item of plan) {
       const rel = await fileState.copyTracked(manifest, gameDir, item.from, path.join(exeDir, item.to), { kind: 'optiscaler' });
       log('updated', { rel });
+    }
+
+    if (needsManagedSr && !fs.existsSync(srTarget) && srRuntimePath) {
+      const rel = await fileState.copyTracked(manifest, gameDir, srRuntimePath, srTarget, { kind: 'dlss-sr-runtime' });
+      log('added', { rel });
+    } else if (needsManagedSr && fs.existsSync(srTarget)) {
+      log('runtimeKept', { rel: path.relative(gameDir, srTarget) });
     }
 
     if (fs.existsSync(runtimeTarget)) {
@@ -316,12 +341,14 @@ async function upgradeManaged({ gameDir, exePath, packageRoot, runtimePath, sett
     }
 
     const baseText = ini.read(configFile) || ini.read(path.join(packageRoot, 'OptiScaler.ini'));
-    await fileState.writeTracked(manifest, gameDir, configFile, configure(baseText, { exePath }, settings, manifest.optiscaler?.inputRoute ? { id: manifest.optiscaler.inputRoute } : null), { kind: 'config' });
+    await fileState.writeTracked(manifest, gameDir, configFile, configure(baseText, { exePath }, settings, effectiveRoute), { kind: 'config' });
     manifest.optiscaler = {
       ...manifest.optiscaler,
       version: RELEASE.packageId,
       upstreamVersion: RELEASE.version,
       hook: hookFor(api),
+      inputRoute: effectiveRoute?.id || manifest.optiscaler?.inputRoute || null,
+      srRuntimeVersion: needsManagedSr && fs.existsSync(srTarget) ? pe.getFileVersion(srTarget) : null,
       updatedAt: new Date().toISOString()
     };
     await fileState.saveManifest(gameDir, manifest);
