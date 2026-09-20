@@ -137,24 +137,22 @@ test('standalone shell uses the DLSS5 + Before Upscaling wordmark', () => {
   assert.doesNotMatch(html, />NR</);
 });
 
-test('standalone build generates the approved vector 5 Manager application icon', () => {
+test('standalone build uses the approved DLSS5 Before Upscaling PNG artwork everywhere', () => {
   const pkg = JSON.parse(read('package.json'));
   const main = read('standalone/main.js');
   const iconScript = read('scripts/make-standalone-icon.js');
-  const iconSource = read('standalone/renderer/icon-source.svg');
   assert.equal(pkg.scripts['icon:standalone'], 'electron scripts/make-standalone-icon.js');
   assert.equal(pkg.scripts['prebuild:standalone:portable'], 'npm run icon:standalone');
   assert.equal(pkg.scripts['prestart:standalone'], 'npm run icon:standalone');
   assert.match(main, /renderer['"], 'app-icon\.png/);
   assert.match(iconScript, /DLSS5 Before Upscaling standalone icon/);
-  assert.match(iconScript, /icon-source\.svg/);
-  assert.match(iconScript, /transparent: true/);
-  assert.match(iconScript, /backgroundColor: '#00000000'/);
+  assert.match(iconScript, /icon-source\.png/);
   assert.match(iconScript, /build\/icon\.ico|icon\.ico/);
   assert.match(iconScript, /app-icon\.png/);
-  assert.match(iconSource, /<rect[^>]+rx="\d+"[^>]+fill="#0B0D0E"\/>/);
-  assert.match(iconSource, /fill="#80C704"/);
-  assert.match(iconSource, />BEFORE UPSCALING<\/text>/);
+  const iconPath = path.join(root, 'standalone/renderer/icon-source.png');
+  assert.ok(fs.existsSync(iconPath), 'approved icon PNG should be bundled');
+  assert.ok(fs.statSync(iconPath).size > 5000, 'approved icon PNG should not be empty');
+  assert.match(read('README.md'), /standalone\/renderer\/icon-source\.png/);
 });
 
 test('settings includes a Buy Me a Coffee support card with a bundled QR code', () => {

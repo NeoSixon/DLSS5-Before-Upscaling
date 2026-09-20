@@ -1,18 +1,16 @@
 'use strict';
 // DLSS5 Before Upscaling standalone icon.
-// Render the approved flat 5 / upscaling mark from vector artwork so every ICO
-// size is generated from a clean 1024px source with true transparent corners.
+// The approved PNG artwork is the single source of truth for README, app window and EXE icons.
 
-const { app, BrowserWindow } = require('electron');
+const { app, nativeImage } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'build');
-const SOURCE_ICON = path.join(ROOT, 'standalone', 'renderer', 'icon-source.svg');
+const SOURCE_ICON = path.join(ROOT, 'standalone', 'renderer', 'icon-source.png');
 const WINDOW_ICON = path.join(ROOT, 'standalone', 'renderer', 'app-icon.png');
 const ICO_SIZES = [16, 24, 32, 48, 64, 128, 256];
-const RENDER_SIZE = 512;
 
 function buildIco(images) {
   const header = Buffer.alloc(6);
@@ -37,30 +35,9 @@ function buildIco(images) {
   return Buffer.concat([header, directory, ...images.map(image => image.png)]);
 }
 
-app.whenReady().then(async () => {
-  const sourceSvg = fs.readFileSync(SOURCE_ICON, 'utf8');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-    html,body{margin:0;width:${RENDER_SIZE}px;height:${RENDER_SIZE}px;overflow:hidden;background:transparent}
-    svg{display:block;width:${RENDER_SIZE}px;height:${RENDER_SIZE}px}
-  </style></head><body>${sourceSvg}</body></html>`;
-
-  const win = new BrowserWindow({
-    show: false,
-    frame: false,
-    transparent: true,
-    backgroundColor: '#00000000',
-    width: RENDER_SIZE,
-    height: RENDER_SIZE,
-    useContentSize: true,
-    resizable: false,
-    webPreferences: { offscreen: true }
-  });
-
-  await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
-  win.setContentSize(RENDER_SIZE, RENDER_SIZE);
-  await new Promise(resolve => setTimeout(resolve, 80));
-  const source = await win.webContents.capturePage({ x: 0, y: 0, width: RENDER_SIZE, height: RENDER_SIZE });
-  win.destroy();
+app.whenReady().then(() => {
+  const source = nativeImage.createFromPath(SOURCE_ICON);
+  if (source.isEmpty()) throw new Error(`Could not load icon source: ${SOURCE_ICON}`);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.mkdirSync(path.dirname(WINDOW_ICON), { recursive: true });
@@ -71,10 +48,10 @@ app.whenReady().then(async () => {
   }));
 
   fs.writeFileSync(path.join(OUT_DIR, 'icon.ico'), buildIco(images));
-  fs.writeFileSync(path.join(OUT_DIR, 'icon.png'), source.toPNG());
+  fs.writeFileSync(path.join(OUT_DIR, 'icon.png'), source.resize({ width: 512, height: 512, quality: 'best' }).toPNG());
   fs.writeFileSync(WINDOW_ICON, source.resize({ width: 256, height: 256, quality: 'best' }).toPNG());
 
-  console.log('wrote DLSS5 Before Upscaling vector icon with transparent rounded corners');
+  console.log('wrote DLSS5 Before Upscaling icon from the approved PNG artwork');
   app.quit();
 }).catch(error => {
   console.error(error);
