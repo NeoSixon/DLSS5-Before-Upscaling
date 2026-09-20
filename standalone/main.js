@@ -53,6 +53,14 @@ let folderSelectionGeneration = 0;
 const stateFile = () => path.join(app.getPath('userData'), 'standalone-library.json');
 const idFor = exePath => crypto.createHash('sha1').update(path.resolve(exePath).toLowerCase()).digest('hex').slice(0, 16);
 const normalizedExePath = exePath => path.resolve(String(exePath)).toLowerCase();
+const inferredLibraryName = (exePath, libraryDir) => {
+  const exeStem = path.basename(String(exePath || ''), path.extname(String(exePath || '')));
+  if (!libraryDir) return exeStem;
+  let name = path.basename(path.resolve(String(libraryDir))).trim();
+  name = name.replace(/\s+game$/i, '').trim();
+  if (!name || /^(game|games|client|bin|bin64|binaries|win64|x64)$/i.test(name)) return exeStem;
+  return name;
+};
 const settingsFor = value => {
   const next = { ...DEFAULT_GAME_SETTINGS, ...(value || {}) };
   const primary = STYLE_VALUES.has(String(next.pass1Style)) ? String(next.pass1Style) : '0';
@@ -72,6 +80,12 @@ function loadState() {
     const parsed = JSON.parse(fs.readFileSync(stateFile(), 'utf8'));
     if (parsed && typeof parsed === 'object' && Array.isArray(parsed.games)) {
       liveState = { ...defaultState(), ...parsed };
+      for (const record of liveState.games) {
+        const exeStem = path.basename(String(record?.exePath || ''), path.extname(String(record?.exePath || '')));
+        if (!record.displayName || String(record.displayName).toLowerCase() === exeStem.toLowerCase()) {
+          record.displayName = inferredLibraryName(record.exePath, record.libraryDir);
+        }
+      }
       liveState.ignoredPaths = Array.isArray(liveState.ignoredPaths)
         ? [...new Set(liveState.ignoredPaths.map(normalizedExePath))]
         : [];
@@ -102,7 +116,7 @@ function normalizeRecord(exePath, meta = {}) {
     dir: path.dirname(resolved),
     exePath: resolved,
     profileId: profile?.id || null,
-    displayName: meta.displayName || path.basename(resolved, path.extname(resolved)),
+    displayName: meta.displayName || inferredLibraryName(resolved, meta.libraryDir || path.dirname(resolved)),
     launcher: meta.launcher || 'Manual',
     storeId: meta.storeId || null,
     libraryDir: meta.libraryDir || path.dirname(resolved),
@@ -224,7 +238,7 @@ async function inspectRecord(record, refresh = false) {
   const profile = profileFor(record.exePath);
   if (refresh) inspectionCache.delete(record.id);
   if (!inspectionCache.has(record.id)) {
-    const pending = gameScan.inspect(record.exePath, profile);
+    const pending = gameScan.inspect(record.exePath, profile, record.libraryDir);
     inspectionCache.set(record.id, pending);
     pending.catch(() => {
       if (inspectionCache.get(record.id) === pending) inspectionCache.delete(record.id);
