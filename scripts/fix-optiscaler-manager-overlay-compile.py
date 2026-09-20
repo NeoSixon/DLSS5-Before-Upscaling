@@ -62,11 +62,12 @@ def main() -> int:
 
     text = target.read_text(encoding="utf-8-sig")
 
-    # IsRunningVk is implemented in the pinned backend but declared in this header,
-    # which stock menu_common.cpp does not otherwise need.
+    # v0.7.x exposed the Vulkan running-state helper from a separate header.
+    # v0.8.x publishes backend status through DlssNr_Status.h (included by DlssNr.h),
+    # so the extra include is neither necessary nor present in the modern tree.
     include_anchor = "#include <dlssnr/DlssNr_ExposureScan.h>\n"
     include_line = "#include <dlssnr/DlssNrFeature_Vk.h>\n"
-    if include_line not in text:
+    if include_line not in text and include_anchor in text:
         text = replace_once(text, include_anchor, include_anchor + include_line, "Vulkan NR header include")
 
     # Pinned ImGui has GetContentRegionAvail(), not the newer window-content helper.
@@ -510,7 +511,9 @@ def main() -> int:
                                beforeSr ? "Pre-SR active" : "After-SR active", passes, passes == 1 ? "" : "es");
         else
             ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "NR inactive - waiting for supported DLSS path");'''
-    new_status = r'''        const bool running = DlssNr::IsRunning() || DlssNr::IsRunningVk();
+    new_status = r'''        const auto dx12NrStatus = DlssNr::ReadStatus(DlssNr::Backend::Dx12);
+        const auto vkNrStatus = DlssNr::ReadStatus(DlssNr::Backend::Vulkan);
+        const bool running = dx12NrStatus.running || vkNrStatus.running;
         if (!enabled)
             ImGui::TextDisabled("%s", tr("Off", "关闭"));
         else if (running)
@@ -523,15 +526,15 @@ def main() -> int:
         }
         else
         {
-            const auto activeFeature = State::Instance().currentFeature;
-            const bool nativeVk = activeFeature && activeFeature->Api() == API::Vulkan && !activeFeature->IsWithDx12();
-            const char* failure = nativeVk ? DlssNr::FailureReasonVk() : DlssNr::FailureReason();
-            if (failure != nullptr && failure[0] != 0)
-                ImGui::TextColored(ImVec4(0.92f, 0.35f, 0.30f, 1.0f), "NR inactive - %s", failure);
+            const std::string failure = !dx12NrStatus.failureReason.empty()
+                                            ? dx12NrStatus.failureReason
+                                            : vkNrStatus.failureReason;
+            if (!failure.empty())
+                ImGui::TextColored(ImVec4(0.92f, 0.35f, 0.30f, 1.0f), "NR inactive - %s", failure.c_str());
             else
                 ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "%s",
-                                   tr("NR inactive - waiting for DLSS evaluate",
-                                      "NR 未运行 - 等待 DLSS Evaluate 调用"));
+                                   tr("NR inactive - waiting for temporal evaluate",
+                                      "NR 未运行 - 等待时域 Evaluate 调用"));
         }'''
     text = replace_once(text, old_status, new_status, "localized status footer")
     text = replace_once(
