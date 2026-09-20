@@ -16,6 +16,10 @@
   <code>In-game overlay</code>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/library.webp" width="720" alt="DLSS5 Before Upscaling game library">
+</p>
+
 ---
 
 ## What it does
@@ -23,6 +27,28 @@
 DLSS5 Before Upscaling gives each supported game its own Neural Rendering profile. It discovers installed titles, checks the usable rendering path, installs the managed backend, and keeps the controls for running Neural Rendering before DLSS Super Resolution in one place.
 
 The desktop app handles setup and per-game configuration. Image-dependent tuning stays in the in-game panel, where changes can be judged against the actual frame.
+
+## Download
+
+DLSS5 Before Upscaling is currently in the **0.1.x preview** stage.
+
+**[Download the latest published preview from GitHub Releases](https://github.com/NeoSixon/DLSS5-Before-Upscaling/releases).**
+
+For the newest development build:
+
+**[Actions](https://github.com/NeoSixon/DLSS5-Before-Upscaling/actions) → latest successful CI run → `DLSS5-Before-Upscaling-Windows-preview`**
+
+> This is an early preview. Game compatibility may vary, and the UI and workflow may change between releases.
+
+## Quick start
+
+1. Download and run `DLSS5-Before-Upscaling.exe`.
+2. Scan your installed game libraries or add a game manually.
+3. Open a supported game's profile.
+4. Enable Neural Rendering, choose Before-Upscaling / Pre-SR placement, and configure 1–3 passes.
+5. Launch the game and press **Insert** to tune image-dependent options in the in-game panel.
+
+When required, the app will ask you to select a trusted local copy of `nvngx_dlssnr.dll`.
 
 ## The render path
 
@@ -50,23 +76,17 @@ The core workflow is simple: Neural Rendering is configured to run before the up
 
 ## Inside the app
 
-| Library | Per-game profile |
-| --- | --- |
-| Scan installed libraries, add a game manually, search, filter, favorite, hide or remove a library entry without deleting game files. | Enable DLSS 5 Neural Rendering, switch Pre-SR placement, choose 1–3 passes and configure the style of each pass. |
-| **In-game panel** | **Recovery** |
-| Press **Insert** to open the compact overlay for image tuning while the game is running. | Managed installs keep tracked backups so the original game files can be restored from the app. |
+<p align="center">
+  <img src="docs/screenshots/profile.webp" width="720" alt="DLSS5 Before Upscaling per-game Neural Rendering profile">
+</p>
 
-## Download
+**Game library** — Scan installed libraries, add titles manually, search, filter, favorite, hide or remove entries without deleting game files.
 
-The project is currently in the **0.1.x preview** stage.
+**Per-game profiles** — Enable DLSS 5 Neural Rendering, switch Pre-SR placement, choose 1–3 passes, and configure each pass independently.
 
-The first public preview is available from GitHub Releases:
+**In-game panel** — Press **Insert** while the game is running to tune image-dependent settings against the actual frame.
 
-**Releases → `DLSS5 Before Upscaling v0.1.0 Preview` → `DLSS5-Before-Upscaling.exe`**
-
-Every successful push to `main` also produces a Windows portable snapshot in GitHub Actions:
-
-**Actions → latest successful CI run → `DLSS5-Before-Upscaling-Windows-preview`**
+**Recovery** — Managed installs keep tracked backups so original game files can be restored from the app.
 
 ## Current scope
 
@@ -118,7 +138,7 @@ test/
   standalone regression and renderer tests
 ```
 
-## Credits & licences
+## Credits & licenses
 
 DLSS5 Before Upscaling is MIT licensed.
 
