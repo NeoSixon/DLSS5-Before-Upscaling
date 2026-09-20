@@ -43,12 +43,19 @@ For the newest development build:
 ## Quick start
 
 1. Download and run `DLSS5-Before-Upscaling.exe`.
-2. Scan your installed game libraries or add a game manually.
-3. Open a supported game's profile.
-4. Enable Neural Rendering, choose Before-Upscaling / Pre-SR placement, and configure 1–3 passes.
-5. Launch the game and press **Insert** to tune image-dependent options in the in-game panel.
+2. Click **Scan library**, or use **Add game** to select a game's main executable manually.
+3. Open a compatible game from the Library.
+4. Configure Neural Rendering:
+   - Enable **DLSS 5 Neural Rendering**.
+   - Enable **Pre-SR** to run Neural Rendering before DLSS Super Resolution.
+   - Choose **1–3 passes** and the style for each pass.
+5. Click **Install / update backend**.
+   - If `nvngx_dlssnr.dll` is not already available, the app will ask you to select a trusted local copy.
+   - The runtime is validated locally and can be cached for reuse.
+6. Launch the game and keep **DLSS Super Resolution enabled** in the game's graphics settings.
+7. Press **Insert** in game to open the Neural Rendering panel and tune image-dependent settings.
 
-When required, the app will ask you to select a trusted local copy of `nvngx_dlssnr.dll`.
+To undo the managed installation, open the game profile and use **Restore original**.
 
 ## The render path
 
