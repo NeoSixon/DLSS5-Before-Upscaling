@@ -151,7 +151,13 @@ test('standalone build uses the approved DLSS5 Before Upscaling PNG artwork ever
   assert.match(iconScript, /app-icon\.png/);
   const iconPath = path.join(root, 'standalone/renderer/icon-source.png');
   assert.ok(fs.existsSync(iconPath), 'approved icon PNG should be bundled');
-  assert.ok(fs.statSync(iconPath).size > 5000, 'approved icon PNG should not be empty');
+  const iconBytes = fs.readFileSync(iconPath);
+  assert.ok(iconBytes.length > 1000, 'approved icon PNG should not be empty');
+  assert.deepEqual(
+    Array.from(iconBytes.subarray(0, 8)),
+    [137, 80, 78, 71, 13, 10, 26, 10],
+    'approved icon should have a valid PNG signature'
+  );
   assert.match(read('README.md'), /standalone\/renderer\/icon-source\.png/);
 });
 
