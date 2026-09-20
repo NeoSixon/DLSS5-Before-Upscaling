@@ -156,15 +156,18 @@ inline static NVSDK_NGX_Result NVSDK_CONV Hooked_Dlss5_D3D12_ReleaseFeature(NVSD
 '''
     text = replace_once(text, attach_anchor, attach_block, "D3D12 detour attach")
 
-    fail_anchor = r'''            Original_D3D11_GetFeatureRequirements = nullptr;
+    reset_anchor = r'''            Original_D3D11_GetFeatureRequirements = nullptr;
             Original_D3D12_GetFeatureRequirements = nullptr;
             Original_Vulkan_GetFeatureRequirements = nullptr;
 '''
-    fail_block = fail_anchor + r'''            Original_D3D12_CreateFeature = nullptr;
+    reset_block = reset_anchor + r'''            Original_D3D12_CreateFeature = nullptr;
             Original_D3D12_EvaluateFeature = nullptr;
             Original_D3D12_ReleaseFeature = nullptr;
 '''
-    text = replace_once(text, fail_anchor, fail_block, "D3D12 hook failure reset")
+    reset_count = text.count(reset_anchor)
+    if reset_count != 2:
+        raise RuntimeError(f"D3D12 hook pointer resets: expected 2 matches, found {reset_count}")
+    text = text.replace(reset_anchor, reset_block)
 
     unhook_cond_old = r'''    if (Original_D3D11_GetFeatureRequirements != nullptr || Original_D3D12_GetFeatureRequirements != nullptr)
 '''
@@ -188,17 +191,6 @@ inline static NVSDK_NGX_Result NVSDK_CONV Hooked_Dlss5_D3D12_ReleaseFeature(NVSD
             DetourDetach(&(PVOID&) Original_D3D12_ReleaseFeature, Hooked_Dlss5_D3D12_ReleaseFeature);
 '''
     text = replace_once(text, detach_anchor, detach_block, "D3D12 detour detach")
-
-    clear_anchor = r'''            Original_D3D11_GetFeatureRequirements = nullptr;
-            Original_D3D12_GetFeatureRequirements = nullptr;
-            Original_Vulkan_GetFeatureRequirements = nullptr;
-'''
-    clear_block = clear_anchor + r'''            Original_D3D12_CreateFeature = nullptr;
-            Original_D3D12_EvaluateFeature = nullptr;
-            Original_D3D12_ReleaseFeature = nullptr;
-'''
-    # One copy remains in the successful unhook branch after the failure-reset copy was expanded.
-    text = replace_once(text, clear_anchor, clear_block, "D3D12 unhook pointer reset")
 
     create_assign = r'''            _module.D3D12_CreateFeature = (PFN_D3D12_CreateFeature) KernelBaseProxy::GetProcAddress_()(
                 _module.dll, "NVSDK_NGX_D3D12_CreateFeature");
