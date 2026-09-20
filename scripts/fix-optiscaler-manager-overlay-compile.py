@@ -479,8 +479,8 @@ def main() -> int:
                 ImGui::TextColored(ImVec4(0.92f, 0.35f, 0.30f, 1.0f), "NR inactive - %s", failure.c_str());
             else
                 ImGui::TextColored(ImVec4(0.90f, 0.72f, 0.34f, 1.0f), "%s",
-                                   tr("NR inactive - waiting for temporal evaluate",
-                                      "NR 未运行 - 等待时域 Evaluate 调用"));
+                                   tr("NR inactive - enable DLSS / FSR / XeSS in the game",
+                                      "NR 未运行 - 请在游戏设置中开启 DLSS / FSR / XeSS"));
         }'''
     text = replace_once(text, old_status, new_status, "localized status footer")
     text = replace_once(
