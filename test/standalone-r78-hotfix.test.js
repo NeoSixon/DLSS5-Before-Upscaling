@@ -39,6 +39,11 @@ test('library updates a managed backend in place instead of restore then install
   assert.match(optiscaler, /async function upgradeManaged/);
   assert.match(optiscaler, /update-stage-/);
   assert.match(optiscaler, /rollbackManagedTargets/);
+  assert.match(optiscaler, /const targetCandidates = \[/);
+  assert.match(optiscaler, /\.\.\.\(obsoleteTracked \? \[obsoleteHelper\] : \[\]\)/);
+  assert.doesNotMatch(optiscaler, /return path\.resolve\(match\)/);
+  assert.match(updater, /const inspected = await gameScan\.inspect\(record\.exePath\)/);
+  assert.match(updater, /srRuntime\.resolve/);
 });
 
 test('library scan shows progress before discovery completes', () => {
