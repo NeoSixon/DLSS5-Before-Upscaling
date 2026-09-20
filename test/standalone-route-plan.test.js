@@ -45,10 +45,12 @@ test('32-bit and unsupported APIs are not offered the in-process route', () => {
   assert.equal(chooseRoute({ chosen: { api: 'opengl', bitness: 64 } }).installable, false);
 });
 
-test('temporal provider filenames cover common XeSS FSR and FidelityFX DLLs', () => {
+test('temporal provider filenames require an actual upscaler, not generic FidelityFX runtime DLLs', () => {
   assert.equal(scan.temporalKindFromName('libxess.dll'), 'xess');
   assert.equal(scan.temporalKindFromName('ffx_fsr2_api_x64.dll'), 'fsr2');
   assert.equal(scan.temporalKindFromName('ffx_fsr3upscaler_x64.dll'), 'fsr3');
-  assert.equal(scan.temporalKindFromName('amd_fidelityfx_loader_dx12.dll'), 'ffx');
+  assert.equal(scan.temporalKindFromName('amd_fidelityfx_upscaler_dx12.dll'), 'ffx');
+  assert.equal(scan.temporalKindFromName('amd_fidelityfx_loader_dx12.dll'), null);
+  assert.equal(scan.temporalKindFromName('amd_fidelityfx_dx12.dll'), null);
   assert.equal(scan.temporalKindFromName('nvngx_dlss.dll'), null);
 });
