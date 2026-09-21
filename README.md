@@ -79,7 +79,7 @@ Output
 
 For native DLSS titles, the app uses the detected DLSS path. Where supported, temporal FSR/XeSS inputs can be routed through the managed DLSS Super Resolution path.
 
-## Inside the app
+## Inside the app 
 
 <p align="center">
   <img src="docs/screenshots/profile.png" width="720" alt="DLSS5 Before Upscaling per-game Neural Rendering profile">
