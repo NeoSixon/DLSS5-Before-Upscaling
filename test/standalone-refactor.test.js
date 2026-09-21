@@ -125,20 +125,25 @@ test('standalone packaging has its own DLSS 5 product identity and entry point',
   assert.doesNotMatch(config.files.join('\n'), /src\/\*\*/);
 });
 
-test('standalone shell uses the DLSS5 + Before Upscaling wordmark', () => {
+test('standalone shell uses the branded DLSS5 Before Upscaling header artwork', () => {
   const html = read('standalone/renderer/index.html');
   const theme = read('standalone/renderer/nvidia-ui.css');
-  const ux = read('standalone/renderer/ux-fixes.js');
-  assert.match(html, /class="brand-dlss">DLSS/);
-  assert.match(html, /class="brand-five">5/);
-  assert.match(html, /class="brand-subtitle">Before Upscaling/);
+  assert.match(html, /class="brand-logo"/);
+  assert.match(html, /src="assets\/brand-header\.png"/);
   assert.match(html, /aria-label="DLSS5 Before Upscaling"/);
-  assert.match(theme, /\.brand-dlss:after/);
-  assert.match(theme, /background:var\(--accent\)/);
-  assert.match(theme, /\.brand-five\{[^}]*color:var\(--accent\)/);
-  assert.match(ux, /subtitle\.textContent = 'Before Upscaling'/);
-  assert.doesNotMatch(html, /class="brand-mark"/);
-  assert.doesNotMatch(html, />NR</);
+  assert.match(theme, /\.brand-logo\{/);
+  assert.doesNotMatch(html, /class="brand-dlss"/);
+  assert.doesNotMatch(html, /class="brand-five"/);
+  assert.doesNotMatch(html, /class="brand-subtitle"/);
+  const brandPath = path.join(root, 'standalone/renderer/assets/brand-header.png');
+  assert.ok(fs.existsSync(brandPath), 'brand header PNG should be bundled');
+  const brandBytes = fs.readFileSync(brandPath);
+  assert.ok(brandBytes.length > 1000, 'brand header PNG should not be empty');
+  assert.deepEqual(
+    Array.from(brandBytes.subarray(0, 8)),
+    [137, 80, 78, 71, 13, 10, 26, 10],
+    'brand header should have a valid PNG signature'
+  );
 });
 
 test('standalone build uses the approved DLSS5 Before Upscaling PNG artwork everywhere', () => {
