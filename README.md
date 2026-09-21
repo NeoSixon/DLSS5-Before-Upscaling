@@ -9,6 +9,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/NeoSixon/DLSS5-Before-Upscaling/releases/latest"><img src="https://img.shields.io/github/v/release/NeoSixon/DLSS5-Before-Upscaling?label=release&color=80c704" alt="Latest release"></a>
+  <a href="https://github.com/NeoSixon/DLSS5-Before-Upscaling/releases"><img src="https://img.shields.io/github/downloads/NeoSixon/DLSS5-Before-Upscaling/total?label=downloads&color=80c704" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-80c704" alt="Windows 10 and 11">
+  <img src="https://img.shields.io/badge/UI-English%20%7C%20%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-80c704" alt="English and Simplified Chinese">
+  <a href="https://buymeacoffee.com/NeoSixon"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=000" alt="Buy me a coffee"></a>
+</p>
+
+<p align="center">
   <code>Windows</code>&nbsp;&nbsp;
   <code>Before Upscaling</code>&nbsp;&nbsp;
   <code>1–3 passes</code>&nbsp;&nbsp;
@@ -108,7 +116,7 @@ For native DLSS titles, the app uses the detected DLSS path. Where supported, te
 - Managed OptiScaler DLSS-NR Pre-SR Multipass backend
 - Launcher discovery plus folder-based/manual game addition
 - Steam and local game artwork discovery with executable-icon fallback
-- English and Simplified Chinese UI
+- English / 简体中文 UI
 - Portable Windows build
 
 ## Runtime handling
