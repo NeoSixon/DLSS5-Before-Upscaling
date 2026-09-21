@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/library.png" width="720" alt="DLSS5 Before Upscaling game library">
+  <img src="docs/screenshots/library.png?v=4c5f7b3f" width="720" alt="DLSS5 Before Upscaling game library">
 </p>
 
 ---
@@ -82,7 +82,7 @@ For native DLSS titles, the app uses the detected DLSS path. Where supported, te
 ## Inside the app 
 
 <p align="center">
-  <img src="docs/screenshots/profile.png" width="720" alt="DLSS5 Before Upscaling per-game Neural Rendering profile">
+  <img src="docs/screenshots/profile.png?v=c7bd1b24" width="720" alt="DLSS5 Before Upscaling per-game Neural Rendering profile">
 </p>
 
 **Game library** — Scan installed libraries, add titles manually, search, filter, favorite, hide or remove entries without deleting game files.
