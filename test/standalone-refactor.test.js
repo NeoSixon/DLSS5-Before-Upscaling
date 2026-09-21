@@ -118,7 +118,7 @@ test('standalone packaging has its own DLSS 5 product identity and entry point',
   assert.equal(config.productName, 'DLSS5 Before Upscaling');
   assert.equal(config.appId, 'com.neosixon.dlss5beforeupscaling');
   assert.equal(config.extraMetadata.name, 'dlss5-before-upscaling');
-  assert.equal(config.extraMetadata.version, '0.1.0');
+  assert.equal(config.extraMetadata.version, '1.0.0');
   assert.equal(config.extraMetadata.main, 'standalone/main.js');
   assert.deepEqual(config.win.target, ['portable']);
   assert.match(config.files.join('\n'), /standalone\/\*\*\/\*/);

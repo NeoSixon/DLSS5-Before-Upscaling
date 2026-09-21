@@ -1,6 +1,6 @@
 {
   "name": "dlss5-before-upscaling",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Configure DLSS 5 Neural Rendering before the upscaling stage.",
   "main": "standalone/main.js",
   "scripts": {
